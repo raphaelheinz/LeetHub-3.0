@@ -1,13 +1,13 @@
 <h1 align="center">
-  <a href="https://standardjs.com"><img src="assets/octocode.png" alt="LeetHub v2 - Automatically sync your code to GitHub." width="400"></a>
+  <a href="https://standardjs.com"><img src="assets/octocode.png" alt="LeetHub v3 - Automatically sync your code to GitHub." width="400"></a>
   <br>
-  <a href="https://chrome.google.com/webstore/detail/leethub-v2/mhanfgfagplhgemhjfeolkkdidbakocm">LeetHub v2</a> - Automatically sync your code to GitHub.
+  <!-- <a href="https://chrome.google.com/webstore/detail/leethub-v2/mhanfgfagplhgemhjfeolkkdidbakocm">LeetHub v3</a> - Automatically sync your code to GitHub. -->
   <br>
   <br>
 </h1>
 
 <p align="center">
-  <a href="https://github.com/arunbhardwaj/LeetHub-2.0/blob/main/LICENSE">
+  <a href="https://github.com/raphaelheinz/LeetHub-3.0/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"/>
   </a>
   <!-- <a href="https://discord.gg/anXT9vErxu">
@@ -19,8 +19,8 @@
   <!-- <a href="https://chrome.google.com/webstore/detail/leethub/aciombdipochlnkbpcbgdpjffcfdbggi">
     <img src="https://img.shields.io/chrome-web-store/d/aciombdipochlnkbpcbgdpjffcfdbggi.svg" alt="users">
   </a>
-  <a href="https://github.com/arunbhardwaj/LeetHub-1.1/graphs/contributors" alt="Contributors">
-    <img src="https://img.shields.io/github/contributors/arunbhardwaj/LeetHub-1.1" />
+  <a href="https://github.com/raphaelheinz/LeetHub-3.0/graphs/contributors" alt="Contributors">
+    <img src="https://img.shields.io/github/contributors/raphaelheinz/LeetHub-3.0" />
   </a> -->
 </p>
 
@@ -35,7 +35,7 @@
 <!-- ## LeetHub progress and numbers (YouTube Video):
 [![LeetHub](https://user-images.githubusercontent.com/43754306/165053510-a757c95e-c3bc-49d5-995c-7a52368abd37.png)](https://www.youtube.com/watch?v=o33PIjqlOgw "LeetHub saves lives!") -->
 
-## What is LeetHub 2.0?
+## What is LeetHub 3.0?
 <p>A chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="http://leetcode.com/">Leetcode</a> problem. It's forked from the original <a href="https://chrome.google.com/webstore/detail/leethub/aciombdipochlnkbpcbgdpjffcfdbggi?hl=en">LeetHub</a> and improves on it to be faster, cleaner and now works with the new LeetCode UI.</p>
 
 ### Why not merge with the original LeetHub?
@@ -48,7 +48,7 @@ As of now, GitHub is developers' #1 portfolio. LeetHub just makes it much easier
 <p> <strong>2.</strong> There's no easy way of accessing your leetcode problems in one place! <br>
 Moreover, pushing code manually to GitHub from Leetcode is very time consuming. So, why not just automate it entirely without spending a SINGLE additional second on it? </p>
 
-## How does LeetHub work?     
+## How does LeetHub work?
 
 <p>It's as simple as:</p>
 <ol>
@@ -59,7 +59,7 @@ Moreover, pushing code manually to GitHub from Leetcode is very time consuming. 
 </ol>
 
 
-#### BONUS: Star [this repository](https://github.com/arunbhardwaj/LeetHub-2.0) for further development of features. If you want a particular feature, simply [request](https://github.com/arunbhardwaj/LeetHub-2.0/labels/feature) for it!
+#### BONUS: Star [this repository](https://github.com/raphaelheinz/LeetHub-3.0) for further development of features. If you want a particular feature, simply [request](https://github.com/raphaelheinz/LeetHub-3.0/labels/feature) for it!
 
 
 ## Why did I decide to work on LeetHub?
