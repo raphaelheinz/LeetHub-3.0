@@ -83,7 +83,7 @@ const createRepo = (token, name) => {
     private: true,
     auto_init: true,
     description:
-      'Collection of LeetCode questions to ace the coding interview! - Created using [LeetHub v2](https://github.com/arunbhardwaj/LeetHub-2.0)',
+      'Collection of LeetCode questions to ace the coding interview! - Created using [LeetHub v2](https://github.com/raphaelheinz/LeetHub-3.0)',
   };
   data = JSON.stringify(data);
 
@@ -136,8 +136,8 @@ const linkStatusCode = (status, name) => {
   return bool;
 };
 
-/* 
-    Method for linking hook with an existing repository 
+/*
+    Method for linking hook with an existing repository
     Steps:
     1. Check if existing repository exists and the user has write access to it.
     2. Link Hook to it (chrome Storage).
@@ -259,7 +259,7 @@ $('#hook_button').on('click', () => {
     $('#success').text('Attempting to create Hook... Please wait.');
     $('#success').show();
 
-    /* 
+    /*
       Perform processing
       - step 1: Check if current stage === hook.
       - step 2: store repo name as repoName in chrome storage.
