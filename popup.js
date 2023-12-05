@@ -9,11 +9,11 @@ $('#authenticate').on('click', () => {
   }
 });
 
-/* Get URL for welcome page */
 $('#welcome_URL').attr(
   'href',
   chrome.runtime.getURL('welcome.html')
 );
+
 $('#hook_URL').attr(
   'href',
   chrome.runtime.getURL('welcome.html')
@@ -60,12 +60,9 @@ chrome.storage.local.get('leethub_token', (data) => {
             }
           });
         } else if (xhr.status === 401) {
-          // bad oAuth
-          // reset token and redirect to authorization process again!
+          // bad oAuth: reset token and redirect to authorization process again!
           chrome.storage.local.set({ leethub_token: null }, () => {
-            console.log(
-              'BAD oAuth!!! Redirecting back to oAuth process',
-            );
+            console.log('BAD oAuth!!! Redirecting back to oAuth process');
             action = true;
             $('#auth_mode').show();
           });
