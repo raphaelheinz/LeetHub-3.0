@@ -658,8 +658,10 @@ LeetCodeV2.prototype.init = async function () {
   async function getSubmissionId() {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        const submissionId = document.URL.match(/\/(\d+)\/?$/)[1]; // '/problems/two-sum/post-solution?submissionId=999594717'
-        resolve(submissionId);
+        const match = document.URL.match(/\/(\d+)\/?$/);
+        if (match !== null && match.length >= 2){
+          resolve(match[1]); // '/problems/two-sum/post-solution?submissionId/999594717
+        }
       }, 100);
     });
   }
