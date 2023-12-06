@@ -658,11 +658,10 @@ LeetCodeV2.prototype.init = async function () {
   async function getSubmissionId() {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        const match = document.URL.match(/\/(\d+)\/?$/);
-        if (match !== null && match.length >= 2){
-          resolve(match[1]); // '/problems/two-sum/post-solution?submissionId/999594717
-        }
-      }, 100);
+        const submissionsId = document.URL.match(/\/(\d+)(\/|\?|$)/);
+        if (submissionsId !== null){
+            resolve(submissionsId[1]); // '/problems/two-sum/post-solution?submissionId/999594717
+        }}, 1000);
     });
   }
   const submissionId = await getSubmissionId();
@@ -740,12 +739,40 @@ LeetCodeV2.prototype.getLanguageExtension = function () {
   return languages[lang];
 };
 LeetCodeV2.prototype.getNotesIfAny = function () { };
+
+
+LeetCodeV2.prototype.extractQuestionNumber = function() {
+  let qNum = this.submissionData.question.questionId; // Default to questionId
+
+  const content = document.getElementById("qd-content");
+  if (content) {
+    const elementSelector = 'a[href^="/problems/' + window.location.pathname.split('/')[2] + '/"]';
+    const titleElement = content.querySelector(elementSelector);
+
+    if (titleElement) {
+      const numbersMatch = titleElement.textContent.match(/(\d+)\./);
+      if (numbersMatch) {
+        qNum = numbersMatch[1]; // Update qNum if a number is found
+      }
+    } else {
+      console.log("Element for number not found in the specified container.");
+    }
+  } else {
+    console.log("Content div not found.");
+  }
+  return qNum;
+};
+
+/**
+ * Gets a formatted problem name slug from the LeetCodeV2 instance.
+ * @returns {string} A string combining the problem number and the slug title.
+ */
 LeetCodeV2.prototype.getProblemNameSlug = function () {
   const slugTitle = this.submissionData.question.titleSlug;
-  const qNum = this.submissionData.question.questionId;
-
+  const qNum = this.extractQuestionNumber();
   return addLeadingZeros(qNum + '-' + slugTitle);
 };
+
 LeetCodeV2.prototype.getSuccessStateAndUpdate = function () {
   const successTag = document.querySelectorAll('[data-e2e-locator="submission-result"]');
   if (checkElem(successTag)) {
@@ -787,7 +814,7 @@ LeetCodeV2.prototype.parseQuestion = function () {
   let markdown;
   if (this.submissionData != null) {
     const questionUrl = window.location.href.split('/submissions')[0];
-    const qTitle = `${this.submissionData.question.questionId}. ${this.submissionData.question.title}`;
+    const qTitle = `${this.extractQuestionNumber()}. ${this.submissionData.question.title}`;
     const qBody = this.parseQuestionDescription();
 
     difficulty = this.submissionData.question.difficulty;
