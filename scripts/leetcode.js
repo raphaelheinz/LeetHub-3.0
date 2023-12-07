@@ -138,16 +138,6 @@ const update = (
   shouldPreprendDiscussionPosts,
   cb = undefined,
 ) => {
-  const URL = `https://api.github.com/repos/${hook}/contents/${directory}/${filename}`;
-
-  let options = {
-    method: 'GET',
-    headers: {
-      Authorization: `token ${token}`,
-      Accept: 'application/vnd.github.v3+json',
-    },
-  };
-
   let responseSHA;
   return getUpdatedData(token, hook, directory, filename)
     .then(data => {
