@@ -301,9 +301,11 @@ document.addEventListener('click', event => {
   /* Complex since "New" button shares many of the same properties as "Post button */
   if (
     element.classList.contains('icon__3Su4') ||
-    element.parentElement.classList.contains('icon__3Su4') ||
-    element.parentElement.classList.contains('btn-content-container__214G') ||
-    element.parentElement.classList.contains('header-right__2UzF')
+    (element.parentElement != null && (
+      element.parentElement.classList.contains('icon__3Su4') ||
+      element.parentElement.classList.contains('btn-content-container__214G') ||
+      element.parentElement.classList.contains('header-right__2UzF')
+    ))
   ) {
     setTimeout(function () {
       /* Only post if post button was clicked and url changed */
@@ -311,7 +313,7 @@ document.addEventListener('click', event => {
         oldPath !== window.location.pathname &&
         oldPath === window.location.pathname.substring(0, oldPath.length) &&
         !Number.isNaN(window.location.pathname.charAt(oldPath.length))
-      ) {
+        ) {
         const date = new Date();
         const currentDate = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} at ${date.getHours()}:${date.getMinutes()}`;
         const addition = `[Discussion Post (created on ${currentDate})](${window.location})  \n`;
