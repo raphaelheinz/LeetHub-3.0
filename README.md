@@ -35,7 +35,12 @@ There's no easy way of accessing your leetcode problems in one place! Moreover, 
     <img src="assets/extension/4.png" alt="leetcode view" width="800">
 </h1>
 
-<!-- ![leetcode view](assets/extension/4.png) -->
+## Supported UI
+
+LeetHub-3.0 works with two different Leetcode UIs. There are known issues when using the plugin with the "non-dynamic layout". Please use one of the following:
+
+1. **old layout** or
+2. new **"dynamic layout"**
 
 ## Installation
 
