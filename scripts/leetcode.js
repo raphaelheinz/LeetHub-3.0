@@ -301,9 +301,11 @@ document.addEventListener('click', event => {
   /* Complex since "New" button shares many of the same properties as "Post button */
   if (
     element.classList.contains('icon__3Su4') ||
-    element.parentElement.classList.contains('icon__3Su4') ||
-    element.parentElement.classList.contains('btn-content-container__214G') ||
-    element.parentElement.classList.contains('header-right__2UzF')
+    (element.parentElement != null && (
+      element.parentElement.classList.contains('icon__3Su4') ||
+      element.parentElement.classList.contains('btn-content-container__214G') ||
+      element.parentElement.classList.contains('header-right__2UzF')
+    ))
   ) {
     setTimeout(function () {
       /* Only post if post button was clicked and url changed */
@@ -311,7 +313,7 @@ document.addEventListener('click', event => {
         oldPath !== window.location.pathname &&
         oldPath === window.location.pathname.substring(0, oldPath.length) &&
         !Number.isNaN(window.location.pathname.charAt(oldPath.length))
-      ) {
+        ) {
         const date = new Date();
         const currentDate = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} at ${date.getHours()}:${date.getMinutes()}`;
         const addition = `[Discussion Post (created on ${currentDate})](${window.location})  \n`;
@@ -651,7 +653,7 @@ LeetCodeV2.prototype.init = async function () {
         const submissionsId = document.URL.match(/\/(\d+)(\/|\?|$)/);
         if (submissionsId !== null){
             resolve(submissionsId[1]); // '/problems/two-sum/post-solution?submissionId/999594717
-        }}, 1000);
+        }}, 4000);
     });
   }
   const submissionId = await getSubmissionId();
@@ -1051,7 +1053,7 @@ const observer = new MutationObserver(function (_mutations, observer) {
   const v1SubmitBtn = document.querySelector('[data-cy="submit-code-btn"]');
   const v2SubmitBtn = document.querySelector('[data-e2e-locator="console-submit-button"]');
   const textareaList = document.getElementsByTagName('textarea');
-  const textarea = textareaList.length === 4 ? textareaList[2] : textareaList[1];
+  const textarea = textareaList.length === 4 ? textareaList[2] : (textareaList.length === 2 ? textareaList[0] : textareaList[1]);
 
   if(v1SubmitBtn) {
     observer.disconnect();
