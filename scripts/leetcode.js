@@ -653,7 +653,7 @@ LeetCodeV2.prototype.init = async function () {
         const submissionsId = document.URL.match(/\/(\d+)(\/|\?|$)/);
         if (submissionsId !== null){
             resolve(submissionsId[1]); // '/problems/two-sum/post-solution?submissionId/999594717
-        }}, 1000);
+        }}, 4000);
     });
   }
   const submissionId = await getSubmissionId();
@@ -1053,7 +1053,7 @@ const observer = new MutationObserver(function (_mutations, observer) {
   const v1SubmitBtn = document.querySelector('[data-cy="submit-code-btn"]');
   const v2SubmitBtn = document.querySelector('[data-e2e-locator="console-submit-button"]');
   const textareaList = document.getElementsByTagName('textarea');
-  const textarea = textareaList.length === 4 ? textareaList[2] : textareaList[1];
+  const textarea = textareaList.length === 4 ? textareaList[2] : (textareaList.length === 2 ? textareaList[0] : textareaList[1]);
 
   if(v1SubmitBtn) {
     observer.disconnect();
