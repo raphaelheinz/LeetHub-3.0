@@ -15,6 +15,7 @@ const languages = {
   'MS SQL Server': '.sql',
   Oracle: '.sql',
   PHP: '.php',
+  Pandas: '.py',
   Python: '.py',
   Python3: '.py',
   Racket: '.rkt',
