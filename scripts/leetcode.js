@@ -954,6 +954,7 @@ const loader = (leetCode) => {
         iterations++;
         if (iterations > 9) {
           clearInterval(intervalId); // poll for max 10 attempts (10 seconds)
+          leetCode.markUploadFailed();
         }
         return;
       }
