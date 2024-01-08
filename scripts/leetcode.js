@@ -1073,7 +1073,9 @@ const observer = new MutationObserver(function (_mutations, observer) {
   }
 });
 
-observer.observe(document.body, {
-  childList: true,
-  subtree: true,
-});
+setTimeout(() => {
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}, 2000);
