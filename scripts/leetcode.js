@@ -894,10 +894,10 @@ LeetCodeV2.prototype.insertToAnchorElement = function (elem) {
     return;
   }
 
-  if (checkElem(document.getElementsByClassName('ml-auto flex items-center space-x-4'))) {
-    const target = document.getElementsByClassName('ml-auto flex items-center space-x-4')[0];
+  if (checkElem(document.getElementsByClassName('ml-auto'))) {
+    const target = document.getElementsByClassName('ml-auto')[0];
     elem.className = 'runcode-wrapper__8rXm';
-    if (target.childNodes.length > 0) target.childNodes[0].prepend(elem);
+    if (target.childNodes.length > 0) target.prepend(elem);
   }
 };
 LeetCodeV2.prototype.markUploaded = function () {
@@ -945,6 +945,8 @@ chrome.storage.local.get('isSync', data => {
 
 const loader = (leetCode) => {
   let iterations = 0;
+  // start upload indicator here
+  leetCode.startSpinner();
   const intervalId = setInterval(async () => {
     try {
       const isSuccessfulSubmission = leetCode.getSuccessStateAndUpdate();
@@ -952,6 +954,7 @@ const loader = (leetCode) => {
         iterations++;
         if (iterations > 9) {
           clearInterval(intervalId); // poll for max 10 attempts (10 seconds)
+          leetCode.markUploadFailed();
         }
         return;
       }
@@ -978,9 +981,6 @@ const loader = (leetCode) => {
       if (!language) {
         throw new Error('Could not find language');
       }
-
-      // start upload indicator here
-      leetCode.startSpinner();
 
       /* Upload README */
       const updateReadMe = await chrome.storage.local.get('stats').then(({ stats }) => {
