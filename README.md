@@ -42,6 +42,16 @@ LeetHub-3.0 works with two different Leetcode UIs. There are known issues when u
 1. **old layout** or
 2. new **"dynamic layout"**
 
+## Limitations
+
+Your submission may not be successfully uploaded to GitHub if you update the text in the editor too fast. It is necessary to wait for 4 seconds (until the spinner stops) after submitting the solution before entering new characters, switching languages, or switching editors. During this period, your solution is being pushed to GitHub, and the website should maintain its layout without alteration. While this process is less than ideal, we have not found a better solution so far. Sorry for this inconvenience! If you find a fix, your PRs are welcome!
+
+
+
+
+
+
+
 ## Installation
 
 <div align="center">
