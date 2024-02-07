@@ -16,6 +16,7 @@ const languages = {
   Oracle: '.sql',
   PHP: '.php',
   Pandas: '.py',
+  PostgreSQL: '.sql',
   Python: '.py',
   Python3: '.py',
   Racket: '.rkt',
