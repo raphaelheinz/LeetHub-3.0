@@ -1120,6 +1120,6 @@ setTimeout(() => {
 
 // add manual submit button if it does not exist already
 setTimeout(() => {
-  const leetCode = new LeetCode();
+  const leetCode = new LeetCodeV2();
   leetCode.addManualSubmitButton();
 }, 6000);
