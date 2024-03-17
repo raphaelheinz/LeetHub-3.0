@@ -939,7 +939,10 @@ LeetCodeV2.prototype.markUploadFailed = function () {
 
 LeetCodeV2.prototype.addManualSubmitButton = function () {
   let elem = document.getElementById('manualGitSubmit');
-  if(elem) return;
+  const domain = document.URL.match(/:\/\/(www\.)?(.[^/:]+)/)[2].split('.')[0];
+  if (elem || domain != 'leetcode' ) {
+    return;
+  }
 
   var submitButton = document.createElement('button');
   submitButton.id = 'manualGitSubmit';
