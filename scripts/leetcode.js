@@ -294,6 +294,23 @@ function formatStats(time, timePercentile, space, spacePercentile) {
   return `Time: ${time} (${timePercentile}%), Space: ${space} (${spacePercentile}%) - LeetHub`;
 }
 
+function getGitIcon(){
+  // Create an SVG element
+  var gitSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  gitSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  gitSvg.setAttribute('width', '24');
+  gitSvg.setAttribute('height', '24');
+  gitSvg.setAttribute('viewBox', '0 0 114.8625 114.8625');
+
+  // Create a path element inside the SVG
+  var gitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  gitPath.setAttribute('fill', '#100f0d');
+  gitPath.setAttribute('d', 'm112.693375 52.3185-50.149-50.146875c-2.886625-2.88875-7.57075-2.88875-10.461375 0l-10.412625 10.4145 13.2095 13.2095C57.94975 24.759 61.47025 25.45475 63.9165 27.9015c2.461 2.462 3.150875 6.01275 2.087375 9.09375l12.732 12.7305c3.081-1.062 6.63325-.3755 9.09425 2.088875 3.4375 3.4365 3.4375 9.007375 0 12.44675-3.44 3.4395-9.00975 3.4395-12.45125 0-2.585375-2.587875-3.225125-6.387125-1.914-9.57275l-11.875-11.874V74.06075c.837375.415 1.628375.96775 2.326625 1.664 3.4375 3.437125 3.4375 9.007375 0 12.44975-3.4375 3.436-9.01125 3.436-12.44625 0-3.4375-3.442375-3.4375-9.012625 0-12.44975.849625-.848625 1.8335-1.490625 2.88325-1.920375V42.26925c-1.04975-.42975-2.03125-1.066375-2.88325-1.920875-2.6035-2.602625-3.23-6.424375-1.894625-9.622125L36.55325 17.701875 2.1660125 52.086125c-2.88818 2.891125-2.88818 7.57525 0 10.463875l50.1513625 50.146975c2.88725 2.88818125 7.569875 2.88818125 10.461375 0l49.914625-49.9146c2.889625-2.889125 2.889625-7.575625 0-10.463875');
+
+  gitSvg.appendChild(gitPath);
+  return gitSvg;
+}
+
 /* Discussion Link - When a user makes a new post, the link is prepended to the README for that problem.*/
 document.addEventListener('click', event => {
   const element = event.target;
@@ -920,6 +937,38 @@ LeetCodeV2.prototype.markUploadFailed = function () {
   }
 };
 
+LeetCodeV2.prototype.addManualSubmitButton = function () {
+  let elem = document.getElementById('manualGitSubmit');
+  const domain = document.URL.match(/:\/\/(www\.)?(.[^/:]+)/)[2].split('.')[0];
+  if (elem || domain != 'leetcode' ) {
+    return;
+  }
+
+  var submitButton = document.createElement('button');
+  submitButton.id = 'manualGitSubmit';
+  submitButton.className = 'relative inline-flex gap-2 items-center justify-center font-medium cursor-pointer focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-colors bg-transparent enabled:hover:bg-fill-secondary enabled:active:bg-fill-primary text-caption rounded text-text-primary group ml-auto p-1';
+  submitButton.textContent = 'Push ';
+  submitButton.appendChild(getGitIcon());
+
+  let timer;
+  submitButton.addEventListener('mouseenter', () => {
+      timer = setTimeout(() => {
+          var confirmDialog = confirm('Push code to GitHub?');
+          if (confirmDialog) {
+              loader(this);
+          }
+      }, 750);
+  });
+  submitButton.addEventListener('mouseleave', () => {
+      clearTimeout(timer);
+  });
+
+  if (checkElem(document.getElementsByClassName('ml-auto'))) {
+    const target = document.getElementsByClassName('ml-auto')[0].parentElement;
+    target.prepend(submitButton);
+  }
+};
+
 /* Sync to local storage */
 chrome.storage.local.get('isSync', data => {
   keys = [
@@ -1071,6 +1120,7 @@ const observer = new MutationObserver(function (_mutations, observer) {
     const leetCode = new LeetCodeV2();
     v2SubmitBtn.addEventListener('click', () => loader(leetCode));
     textarea.addEventListener('keydown', e => submitByShortcuts(e, leetCode));
+    leetCode.addManualSubmitButton();
   }
 });
 
@@ -1080,3 +1130,9 @@ setTimeout(() => {
     subtree: true,
   });
 }, 2000);
+
+// add manual submit button if it does not exist already
+setTimeout(() => {
+  const leetCode = new LeetCodeV2();
+  leetCode.addManualSubmitButton();
+}, 6000);
