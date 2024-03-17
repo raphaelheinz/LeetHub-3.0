@@ -957,7 +957,7 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
           if (confirmDialog) {
               loader(this);
           }
-      }, 750);
+      }, 300);
   });
   submitButton.addEventListener('mouseleave', () => {
       clearTimeout(timer);
