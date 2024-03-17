@@ -944,11 +944,21 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
   var submitButton = document.createElement('button');
   submitButton.id = 'manualGitSubmit';
   submitButton.className = 'relative inline-flex gap-2 items-center justify-center font-medium cursor-pointer focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-colors bg-transparent enabled:hover:bg-fill-secondary enabled:active:bg-fill-primary text-caption rounded text-text-primary group ml-auto p-1';
-  submitButton.textContent = 'Push To ';
+  submitButton.textContent = 'Push ';
   submitButton.appendChild(getGitIcon());
+
+  let timer;
   submitButton.addEventListener('mouseenter', () => {
-    var confirmDialog = confirm('Push code to Git?');
-    if (confirmDialog) loader(this)});
+      timer = setTimeout(() => {
+          var confirmDialog = confirm('Push code to GitHub?');
+          if (confirmDialog) {
+              loader(this);
+          }
+      }, 750);
+  });
+  submitButton.addEventListener('mouseleave', () => {
+      clearTimeout(timer);
+  });
 
   if (checkElem(document.getElementsByClassName('ml-auto'))) {
     const target = document.getElementsByClassName('ml-auto')[0].parentElement;
