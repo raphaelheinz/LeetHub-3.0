@@ -311,6 +311,53 @@ function getGitIcon(){
   return gitSvg;
 }
 
+function getToolTip() {
+  var toolTip = document.createElement('div');
+  toolTip.id = 'toolTip';
+
+  chrome.storage.local.get('dontShowToolTip').then(({ dontShowToolTip }) => {
+    if (dontShowToolTip) {
+      toolTip.style.visibility = 'hidden';
+      return toolTip;
+    } else {
+      toolTip.className =
+        'fixed bg-sd-popover text-sd-popover-foreground rounded-sd-md z-modal text-xs shadow w-48 p-2 border-sd-border border cursor-default -translate-y-3/4 opacity-0 transition-all duration-300 group-hover:opacity-100 ';
+      toolTip.style.fontWeight = '300';
+      toolTip.textContent = 'You may select from earlier submissions to push.';
+      toolTip.appendChild(getDontShowContainer());
+      toolTip.addEventListener('click', event => event.stopPropagation());
+    }
+  });
+  return toolTip;
+}
+
+function getDontShowContainer() {
+  var dontShowContainer = document.createElement('div');
+  dontShowContainer.className = 'flex item-center justify-center gap-1 mt-2';
+
+  var lable = document.createElement('label');
+  lable.htmlFor = 'dontShowCheckBox';
+  lable.className = 'text-white';
+  lable.textContent = 'dont show it again';
+
+  var checkBox = document.createElement('input');
+  checkBox.type = 'checkbox';
+  checkBox.id = 'dontShowCheckBox';
+  checkBox.addEventListener('click', function (event) {
+    event.stopPropagation();
+    if (this.checked) {
+      chrome.storage.local.set({ dontShowToolTip: true });
+      document.getElementById('toolTip').className = document
+        .getElementById('toolTip')
+        .className.replace('group-hover:opacity-100', '');
+    }
+  });
+
+  dontShowContainer.appendChild(checkBox);
+  dontShowContainer.appendChild(lable);
+  return dontShowContainer;
+}
+
 /* Discussion Link - When a user makes a new post, the link is prepended to the README for that problem.*/
 document.addEventListener('click', event => {
   const element = event.target;
@@ -946,6 +993,7 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
   submitButton.className = 'relative inline-flex gap-2 items-center justify-center font-medium cursor-pointer focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-colors bg-transparent enabled:hover:bg-fill-secondary enabled:active:bg-fill-primary text-caption rounded text-text-primary group ml-auto p-1';
   submitButton.textContent = 'Push ';
   submitButton.appendChild(getGitIcon());
+  submitButton.appendChild(getToolTip());
   submitButton.addEventListener('click', () => loader(this));
 
   let notesIcon = document.querySelectorAll('.ml-auto svg.fa-bookmark');
