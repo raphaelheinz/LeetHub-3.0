@@ -314,16 +314,16 @@ function getGitIcon(){
 function getToolTip() {
   var toolTip = document.createElement('div');
   toolTip.id = 'toolTip';
+  toolTip.className = 'hidden';
 
   chrome.storage.local.get('dontShowToolTip').then(({ dontShowToolTip }) => {
     if (dontShowToolTip) {
-      toolTip.style.visibility = 'hidden';
       return toolTip;
     } else {
+      toolTip.textContent =
+        'You may select from earlier submissions to push. \r\n\r\n You may maintain multiple versions by adding a suffix with a right-click.';
       toolTip.className =
-        'fixed bg-sd-popover text-sd-popover-foreground rounded-sd-md z-modal text-xs shadow w-48 p-2 border-sd-border border cursor-default -translate-y-3/4 opacity-0 transition-all duration-300 group-hover:opacity-100 ';
-      toolTip.style.fontWeight = '300';
-      toolTip.textContent = 'You may select from earlier submissions to push.';
+        'fixed bg-sd-popover text-sd-popover-foreground rounded-sd-md z-modal text-xs text-left font-normal whitespace-pre-line shadow w-48 p-2 border-sd-border border cursor-default translate-y-20 transition-opacity opacity-0 duration-300 group-hover:opacity-100';
       toolTip.appendChild(getDontShowContainer());
       toolTip.addEventListener('click', event => event.stopPropagation());
     }
@@ -337,7 +337,6 @@ function getDontShowContainer() {
 
   var lable = document.createElement('label');
   lable.htmlFor = 'dontShowCheckBox';
-  lable.className = 'text-white';
   lable.textContent = 'dont show it again';
 
   var checkBox = document.createElement('input');
