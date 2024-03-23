@@ -311,6 +311,52 @@ function getGitIcon(){
   return gitSvg;
 }
 
+function getToolTip() {
+  var toolTip = document.createElement('div');
+  toolTip.id = 'toolTip';
+  toolTip.className = 'hidden';
+
+  chrome.storage.local.get('dontShowToolTip').then(({ dontShowToolTip }) => {
+    if (dontShowToolTip) {
+      return toolTip;
+    } else {
+      toolTip.textContent =
+        'You may select from earlier submissions to push. \r\n\r\n You may maintain multiple versions by adding a suffix with a right-click.';
+      toolTip.className =
+        'fixed bg-sd-popover text-sd-popover-foreground rounded-sd-md z-modal text-xs text-left font-normal whitespace-pre-line shadow w-48 p-2 border-sd-border border cursor-default translate-y-20 transition-opacity opacity-0 duration-300 group-hover:opacity-100';
+      toolTip.appendChild(getDontShowContainer());
+      toolTip.addEventListener('click', event => event.stopPropagation());
+    }
+  });
+  return toolTip;
+}
+
+function getDontShowContainer() {
+  var dontShowContainer = document.createElement('div');
+  dontShowContainer.className = 'flex item-center justify-center gap-1 mt-2';
+
+  var lable = document.createElement('label');
+  lable.htmlFor = 'dontShowCheckBox';
+  lable.textContent = 'dont show it again';
+
+  var checkBox = document.createElement('input');
+  checkBox.type = 'checkbox';
+  checkBox.id = 'dontShowCheckBox';
+  checkBox.addEventListener('click', function (event) {
+    event.stopPropagation();
+    if (this.checked) {
+      chrome.storage.local.set({ dontShowToolTip: true });
+      document.getElementById('toolTip').className = document
+        .getElementById('toolTip')
+        .className.replace('group-hover:opacity-100', '');
+    }
+  });
+
+  dontShowContainer.appendChild(checkBox);
+  dontShowContainer.appendChild(lable);
+  return dontShowContainer;
+}
+
 /* Discussion Link - When a user makes a new post, the link is prepended to the README for that problem.*/
 document.addEventListener('click', event => {
   const element = event.target;
@@ -946,7 +992,17 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
   submitButton.className = 'relative inline-flex gap-2 items-center justify-center font-medium cursor-pointer focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-colors bg-transparent enabled:hover:bg-fill-secondary enabled:active:bg-fill-primary text-caption rounded text-text-primary group ml-auto p-1';
   submitButton.textContent = 'Push ';
   submitButton.appendChild(getGitIcon());
+  submitButton.appendChild(getToolTip());
   submitButton.addEventListener('click', () => loader(this));
+  submitButton.addEventListener('contextmenu', event => {
+    event.preventDefault();
+    const suffix = prompt(
+      'Add a suffix for this solution file, i.e., -bfs, -dfs. \r\nWe don\'recommend includes special character except for "-".',
+    );
+    if (isValidSuffix(suffix)) {
+      loader(this, suffix);
+    }
+  });
 
   let notesIcon = document.querySelectorAll('.ml-auto svg.fa-bookmark');
   if (checkElem(notesIcon)) {
@@ -955,8 +1011,16 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
   }
 };
 
+/* Validate if string can be added as suffix. Can add more constrains if necessary. */
+function isValidSuffix (string) {
+  if (!string || string.length > 255) {
+		return false;
+	}
+  return true;
+}
+
 LeetCodeV2.prototype.addUrlChangeListener = function () {
-  window.navigation.addEventListener("navigate", (event) => {
+  window.navigation.addEventListener('navigate', event => {
     const problem = window.location.href.match(/leetcode.com\/problems\/(.*)\/submissions/);
     const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
     if(problem && problem.length > 1 && submissionId && submissionId.length > 1){
@@ -989,7 +1053,7 @@ chrome.storage.local.get('isSync', data => {
   }
 });
 
-const loader = (leetCode) => {
+const loader = (leetCode, suffix) => {
   let iterations = 0;
   // start upload indicator here
   leetCode.startSpinner();
@@ -1061,7 +1125,7 @@ const loader = (leetCode) => {
       /* Upload code to Git */
       const updateCode = leetCode.findAndUploadCode(
         problemName,
-        problemName + language,
+        suffix ? problemName + suffix + language : problemName + language,
         probStats,
         'upload',
       );
