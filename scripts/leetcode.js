@@ -3,6 +3,7 @@ const languages = {
   C: '.c',
   'C++': '.cpp',
   'C#': '.cs',
+  Bash: '.sh',
   Dart: '.dart',
   Elixir: '.ex',
   Erlang: '.erl',
