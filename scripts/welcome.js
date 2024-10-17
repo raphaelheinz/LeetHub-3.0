@@ -3,8 +3,10 @@ const option = () => {
 };
 
 const repositoryName = () => {
-  return $('#name').val().trim();
+  if(option() == 'new') return $('#name').val().trim();
+  else return $('#existing_repo').val().trim();
 };
+
 
 /* Status codes for creating of repo */
 
@@ -135,6 +137,45 @@ const linkStatusCode = (status, name) => {
   $('#unlink').show();
   return bool;
 };
+
+/* Handle inputBox by type selection */
+$('#type').change(function () {
+  const selectedType = $(this).val();
+  if (selectedType === 'link') {
+    $('#name').hide();
+    $('#existing_repo').show();
+    loadRepositories();
+  } else {
+    $('#name').show();
+    $('#existing_repo').hide();
+  }
+});
+
+/* Load repositories from GitHub */
+function loadRepositories() {
+  chrome.storage.local.get('leethub_token', data => {
+    const token = data.leethub_token;
+
+    $.ajax({
+      url: 'https://api.github.com/user/repos',
+      type: 'GET',
+      headers: {
+        Authorization: `token ${token}`,
+      },
+      success: function (repos) {
+        $('#existing_repo').empty().append('<option value="">Select a Repository</option>');
+        repos.forEach(repo => {
+          $('#existing_repo').append(`<option value="${repo.name}">${repo.name}</option>`);
+        });
+      },
+      error: function (xhr, status, error) {
+        console.error('Failed to load repositories:', error);
+        $('#error').text('Failed to load repositories. Please try again.').show();
+      },
+    });
+  });
+}
+
 
 /*
     Method for linking hook with an existing repository
