@@ -157,23 +157,49 @@ function loadRepositories() {
   chrome.storage.local.get('leethub_token', data => {
     const token = data.leethub_token;
 
-    $.ajax({
-      url: 'https://api.github.com/user/repos',
-      type: 'GET',
-      headers: {
-        Authorization: `token ${token}`,
-      },
-      success: function (repos) {
-        $('#existing_repo').empty().append('<option value="">Select a Repository</option>');
-        repos.forEach(repo => {
-          $('#existing_repo').append(`<option value="${repo.name}">${repo.name}</option>`);
-        });
-      },
-      error: function (xhr, status, error) {
-        console.error('Failed to load repositories:', error);
-        $('#error').text('Failed to load repositories. Please try again.').show();
-      },
-    });
+    let repos = [];
+    let page = 1;
+    let hasNextPage = true;
+
+    function fetchRepos() {
+      $.ajax({
+        url: 'https://api.github.com/user/repos',
+        type: 'GET',
+        data: {
+          per_page: 100, // Max per_page to reduce the number of requests
+          page: page, // Page number for pagination
+          affiliation: 'owner',
+        },
+        headers: {
+          Authorization: `token ${token}`,
+        },
+        success: function(response, status, xhr) {
+          repos = repos.concat(response);
+
+          // Check for the next page by looking at the 'Link' header
+          const linkHeader = xhr.getResponseHeader('Link');
+          hasNextPage = linkHeader && linkHeader.includes('rel="next"');
+
+          // If there's a next page, fetch the next page
+          if (hasNextPage) {
+            page++;
+            fetchRepos(); // Recursively fetch the next page
+          } else {
+            // All repos have been fetched, populate the dropdown
+            $('#existing_repo').empty().append('<option value="">Select a Repository</option>');
+            repos.forEach(repo => {
+              $('#existing_repo').append(`<option value="${repo.name}">${repo.name}</option>`);
+            });
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error('Failed to load repositories:', error);
+          $('#error').text('Failed to load repositories. Please try again.').show();
+        },
+      });
+    }
+
+    fetchRepos();
   });
 }
 
