@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LeetHub v3",
-  "description": "Automatically integrate your Leetcode & GeeksforGeeks submissions to GitHub",
+  "description": "Automatically integrate your Leetcode submissions to GitHub",
   "homepage_url": "https://github.com/raphaelheinz/LeetHub-3.0",
   "version": "0.0.14",
   "author": "Raphael Heinz",
@@ -25,13 +25,11 @@
     {
       "matches": [
         "https://leetcode.com/*",
-        "https://github.com/*",
-        "https://practice.geeksforgeeks.org/*"
+        "https://github.com/*"
       ],
       "js": [
         "scripts/leetcode.js",
-        "scripts/authorize.js",
-        "scripts/gfg.js"
+        "scripts/authorize.js"
       ],
       "run_at": "document_idle"
     }
