@@ -5,13 +5,11 @@ body {
   text-align: center;
   transition: background-color 0.75s ease;
   font-size: 13px;
-
   font-family: 'Helvetica Neue', 'Lucida Grande', sans-serif;
 }
 
 #title {
-  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande',
-    sans-serif;
+  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
   font-size: 30px;
   font-weight: bold;
   margin-bottom: 0px;
@@ -19,8 +17,7 @@ body {
 }
 
 #caption {
-  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande',
-    sans-serif;
+  font-family: 'Norwester', 'Helvetica Neue', 'Lucida Grande', sans-serif;
   font-size: 14px;
   font-weight: normal;
   margin-bottom: 0px;
