@@ -84,6 +84,28 @@
             </span>
           </p>
 
+          <!-- Toggle custom commit menu -->
+          <span id="toggle-icon">&#9654;</span> Customize Commit Message
+          
+          <div id="customize-message-container" style="display: none;">
+            <label for="variables">Available Variables</label>
+            <div id="variales">
+              <button class="commit-variable" id="time">Time (Time Percentile)</button>
+              <button class="commit-variable" id="space">Space (Space Percentile)</button>
+              <button class="commit-variable" id="date">Today's Date</button>
+              <button class="commit-variable" id="problemName">Problem Name</button>
+              <button class="commit-variable" id="difficulty">Difficulty</button>
+              <button class="commit-variable" id="language">Solved Language</button>
+            </div>
+            <textarea rows="4" id="custom-commit-msg" placeholder="Time: {time}, Space: {space} - LeetHub"></textarea>
+            <div id="setting-btns">
+              <button class="setting-btns" id="msg-reset-btn">Reset</button>
+              <button class="setting-btns" id="msg-save-btn">Save</button>
+              <br />
+              <span id="success-message">Commit message saved!</span>
+            </div>
+          </div>
+
           <div class="ui small header">
             Want more features?
             <a

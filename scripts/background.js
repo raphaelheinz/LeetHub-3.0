@@ -1,4 +1,8 @@
 function handleMessage(request) {
+  if (request.action === 'customCommitMessageUpdated') {
+    chrome.storage.local.set({ custom_commit_message: request.message })
+  }
+  
   if ( request && request.closeWebPage === true && request.isSuccess === true ) {
     /* Set username */
     chrome.storage.local.set({ leethub_username: request.username });

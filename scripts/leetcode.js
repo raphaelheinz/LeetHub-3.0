@@ -43,6 +43,42 @@ let difficulty = '';
 /* state of upload for progress */
 let uploadState = { uploading: false };
 
+/* returns today's date in MM-DD-YYYY format */
+function getTodaysDate() {
+  const today = new Date();
+  const month = today.getMonth() + 1; // fix months are zero-indexed
+  const day = today.getDate();
+  const year = today.getFullYear();
+
+  const formattedMonth = month < 10 ? '0' + month : month;
+  const formattedDay = day < 10 ? '0' + day : day;
+
+  return `${formattedMonth}-${formattedDay}-${year}`;
+}
+
+const parseCustomCommitMessage = (text, problemContext) => {
+  return text.replace(/{(\w+)}/g, (match, key) => {
+    // check if the variable exists in the problemContext and replace the matching text
+    return problemContext.hasOwnProperty(key) ? problemContext[key] : match;
+});
+}
+
+/* returns custom commit message or null if doesn't exist */
+const getCustomCommitMessage = (problemContext) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get('custom_commit_message', (result) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError); 
+      } else if (!result.custom_commit_message || !result.custom_commit_message.trim()) {
+        resolve(null) // no custom message is set
+      } else {
+        const finalCommitMessage = parseCustomCommitMessage(result.custom_commit_message, problemContext)
+        resolve(finalCommitMessage);
+      }
+    });
+  });
+}
+
 /* Main function for uploading code to GitHub repo, and callback cb is called if success */
 const upload = (token, hook, code, problem, filename, sha, commitMsg, cb = undefined) => {
   const URL = `https://api.github.com/repos/${hook}/contents/${problem}/${filename}`;
@@ -472,7 +508,6 @@ LeetCodeV1.prototype.findAndUploadCode = function (
             );
             commitMsg = `Time: ${resultRuntime}, Memory: ${resultMemory} - LeetHub`;
           }
-
           if (code != null) {
             return uploadGit(
               btoa(unescape(encodeURIComponent(code))),
@@ -843,12 +878,12 @@ LeetCodeV2.prototype.parseStats = function () {
       Math.round((this.submissionData.runtimePercentile + Number.EPSILON) * 100) / 100;
     const spacePercentile =
       Math.round((this.submissionData.memoryPercentile + Number.EPSILON) * 100) / 100;
-    return formatStats(
-      this.submissionData.runtimeDisplay,
-      runtimePercentile,
-      this.submissionData.memoryDisplay,
-      spacePercentile,
-    );
+    return {
+      "time": this.submissionData.runtimeDisplay,
+      "timePercentile": runtimePercentile,
+      "space": this.submissionData.memoryDisplay,
+      "spacePercentile": spacePercentile,
+    };
   }
 
   // Doesn't work unless we wait for page to finish loading.
@@ -1039,6 +1074,7 @@ chrome.storage.local.get('isSync', data => {
     'stats',
     'leethub_hook',
     'mode_type',
+    'custom_commit_message'
   ];
   if (!data || !data.isSync) {
     keys.forEach(key => {
@@ -1122,12 +1158,23 @@ const loader = (leetCode, suffix) => {
           false,
         );
       }
+      
+      const problemContext = {
+        "time": `${probStats.time} (${probStats.timePercentile}%)`,
+        "space": `${probStats.space} (${probStats.spacePercentile}%)`,
+        "language": language,
+        "problemName": problemName,
+        "difficulty": difficulty,
+        "date": getTodaysDate()
+      }
+      const probStatsCommitMsg = `Time: ${probStats.time} (${probStats.timePercentile}%), Space: ${probStats.space} (${probStats.spacePercentile}%) - LeetHub`; // default commit
+      const commitMsg = await getCustomCommitMessage(problemContext) || probStatsCommitMsg;
 
       /* Upload code to Git */
       const updateCode = leetCode.findAndUploadCode(
         problemName,
         suffix ? problemName + suffix + language : problemName + language,
-        probStats,
+        commitMsg,
         'upload',
       );
 
