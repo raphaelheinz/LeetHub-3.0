@@ -33,3 +33,92 @@ body {
   padding-top: 2%;
   font-size: medium;
 }
+
+#toggle-icon {
+  font-size: 10px;
+  width: 20px;
+  height: 20px;
+  background-color: transparent;
+  transition: transform 0.3s ease;
+  display: inline-block;
+  cursor: pointer;
+}
+
+#toggle-icon:hover {
+  background-color: #cfc9c980 !important;
+}
+
+#toggle-icon.open {
+  transform: rotate(90deg);
+}
+
+#customize-btn {
+  margin-top: 1em;
+  border: none;
+  background-color: transparent;
+}
+
+#customize-message-container {
+  border: 1px dotted black;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.setting-btns {
+  align-items: center;
+  background-color: #fff;
+  border: 1px solid #000;
+  box-sizing: border-box;
+  color: #000;
+  cursor: pointer;
+  display: inline-flex;
+  fill: #000;
+  justify-content: center;
+  letter-spacing: -.8px;
+  outline: 0;
+  padding: 0 17px;
+  text-align: center;
+  text-decoration: none;
+  transition: all .3s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+#custom-commit-msg {
+  width: 100%;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  background-color: #f8f8f8;
+  font-size: 16px;
+  resize: none;
+}
+
+.commit-variable {
+  box-sizing: border-box;
+  background-color: #a8dadc;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid black;
+  margin: 2px;
+}
+
+.commit-variable:hover {
+  background-color: #457b9d;
+}
+
+#success-message {
+  color: green;
+  font-size: 14px;
+  display: none;
+}

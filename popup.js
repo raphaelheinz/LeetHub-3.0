@@ -19,6 +19,48 @@ $('#hook_URL').attr(
   chrome.runtime.getURL('welcome.html')
 );
 
+$('#toggle-icon').click(() => {
+  $('#toggle-icon').toggleClass('open');
+  $('#customize-message-container').toggle(); 
+  chrome.storage.local.get(['custom_commit_message'], (data) => {
+    console.log("data after toggling", data)
+    let commitMessage = data.custom_commit_message;
+
+    // if null, undefined, or an empty string, set default placeholder
+    if (!commitMessage) {
+      $('#custom-commit-msg').attr('placeholder', "Time: {time}, Space: {space} - LeetHub");
+    } else {
+      $('#custom-commit-msg').attr('placeholder', commitMessage);
+      $('#custom-commit-msg').val(commitMessage);
+    }
+  });
+});
+
+$('#msg-save-btn').click(() => {
+  const commitMessage = $('#custom-commit-msg').val();
+  chrome.runtime.sendMessage({ action: 'customCommitMessageUpdated', message: commitMessage.trim() });
+
+  const successMessage = $('#success-message');
+  successMessage.show();
+  setTimeout(() => {
+    successMessage.hide();
+  }, 3000)
+});
+
+$('#msg-reset-btn').click(() => {
+  $("#custom-commit-msg").val("")
+  $('#custom-commit-msg').attr('placeholder', "Time: {time}, Space: {space} - LeetHub"); // reset to default
+  chrome.runtime.sendMessage({ action: 'customCommitMessageUpdated', message: null });
+})
+
+/* when variable is clicked, add to custom commit message text area*/
+$('.commit-variable').on('click', function() {
+  var variableName = $(this).attr('id');
+  $('#custom-commit-msg').val(function(index, currentValue) {
+    return currentValue + `{${variableName}} `;
+  });
+});
+
 chrome.storage.local.get('leethub_token', (data) => {
   const token = data.leethub_token;
   if (token === null || token === undefined) {
