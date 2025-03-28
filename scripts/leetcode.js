@@ -37,6 +37,9 @@ const createNotesMsg = 'Attach NOTES - LeetHub';
 const NORMAL_PROBLEM = 0;
 const EXPLORE_SECTION_PROBLEM = 1;
 
+// SubFolder
+const basePath = 'LeetCode';
+
 /* Difficulty of most recenty submitted question */
 let difficulty = '';
 
@@ -54,6 +57,25 @@ function getTodaysDate() {
   const formattedDay = day < 10 ? '0' + day : day;
 
   return `${formattedMonth}-${formattedDay}-${year}`;
+}
+
+/**
+ * Constructs the full GitHub API URL to upload a file to a specific path in the repository.
+ *
+ * @param {string} hook - GitHub repository path in the format "username/repo".
+ * @param {string} basePath - Base folder path where the file will be uploaded (e.g., "algorithm/LeetCode").
+ * @param {string} difficulty - Problem difficulty (e.g., "Easy", "Medium", "Hard").
+ * @param {string} problem - Problem slug or directory name (e.g., "0001-two-sum").
+ * @param {string} filename - Name of the file to upload (e.g., "0001-two-sum.js").
+ * @param {boolean} [useDifficultyFolder=true] - Whether to include the difficulty as a subfolder.
+ * @returns {string} Full GitHub API URL for the file upload.
+ */
+
+function constructGitHubPath(hook, basePath, difficulty, problem, filename, useDifficultyFolder) {
+  const path = useDifficultyFolder
+    ? `${basePath}/${difficulty}/${problem}/${filename}`
+    : `${problem}/${filename}`;
+  return `https://api.github.com/repos/${hook}/contents/${path}`;
 }
 
 const parseCustomCommitMessage = (text, problemContext) => {
@@ -80,8 +102,26 @@ const getCustomCommitMessage = (problemContext) => {
 }
 
 /* Main function for uploading code to GitHub repo, and callback cb is called if success */
-const upload = (token, hook, code, problem, filename, sha, commitMsg, cb = undefined) => {
-  const URL = `https://api.github.com/repos/${hook}/contents/${problem}/${filename}`;
+const upload = (
+  token,
+  hook,
+  code,
+  problem,
+  filename,
+  sha,
+  commitMsg,
+  cb = undefined,
+  useDifficultyFolder,
+) => {
+  // const URL = `https://api.github.com/repos/${hook}/contents/${problem}/${filename}`;
+  const URL = constructGitHubPath(
+    hook,
+    basePath,
+    difficulty,
+    problem,
+    filename,
+    useDifficultyFolder,
+  );
 
   /* Define Payload */
   let data = {
@@ -171,14 +211,15 @@ const update = (
   token,
   hook,
   addition,
-  directory,
+  problem,
   filename,
   commitMsg,
   shouldPreprendDiscussionPosts,
   cb = undefined,
+  useDifficultyFolder,
 ) => {
   let responseSHA;
-  return getUpdatedData(token, hook, directory, filename)
+  return getUpdatedData(token, hook, problem, filename, useDifficultyFolder)
     .then(data => {
       responseSHA = data.sha;
       return decodeURIComponent(escape(atob(data.content)));
@@ -195,7 +236,17 @@ const update = (
         : btoa(unescape(encodeURIComponent(existingContent))),
     )
     .then(newContent =>
-      upload(token, hook, newContent, directory, filename, responseSHA, commitMsg, cb),
+      upload(
+        token,
+        hook,
+        newContent,
+        problem,
+        filename,
+        responseSHA,
+        commitMsg,
+        cb,
+        useDifficultyFolder,
+      ),
     );
 };
 
@@ -216,6 +267,7 @@ function uploadGit(
 
   let token;
   let hook;
+  let useDifficultyFolder = true;
 
   return chrome.storage.local
     .get('leethub_token')
@@ -237,6 +289,10 @@ function uploadGit(
       if (!hook) {
         throw new Error('leethub hook not defined');
       }
+      return chrome.storage.local.get('useDifficultyFolder');
+    })
+    .then(result => {
+      useDifficultyFolder = result.useDifficultyFolder || false;
       return chrome.storage.local.get('stats');
     })
     .then(({ stats }) => {
@@ -247,7 +303,17 @@ function uploadGit(
             ? stats.shas[problemName][fileName]
             : '';
 
-        return upload(token, hook, code, problemName, fileName, sha, commitMsg, cb);
+        return upload(
+          token,
+          hook,
+          code,
+          problemName,
+          fileName,
+          sha,
+          commitMsg,
+          cb,
+          useDifficultyFolder,
+        );
       } else if (action === 'update') {
         return update(
           token,
@@ -258,26 +324,44 @@ function uploadGit(
           commitMsg,
           shouldPrependDiscussionPosts,
           cb,
+          useDifficultyFolder,
         );
       }
     })
     .catch(err => {
       if (err.message === '409') {
-        return getUpdatedData(token, hook, problemName, fileName);
+        return getUpdatedData(token, hook, problemName, fileName, useDifficultyFolder);
       } else {
         throw err;
       }
     })
     .then(data =>
       data != null
-        ? upload(token, hook, code, problemName, fileName, data.sha, commitMsg, cb)
+        ? upload(
+            token,
+            hook,
+            code,
+            problemName,
+            fileName,
+            data.sha,
+            commitMsg,
+            cb,
+            useDifficultyFolder,
+          )
         : undefined,
     );
 }
 
 /* Gets updated GitHub data for the specific file in repo in question */
-async function getUpdatedData(token, hook, directory, filename) {
-  const URL = `https://api.github.com/repos/${hook}/contents/${directory}/${filename}`;
+async function getUpdatedData(token, hook, problem, filename, useDifficultyFolder) {
+  const URL = constructGitHubPath(
+    hook,
+    basePath,
+    difficulty,
+    problem,
+    filename,
+    useDifficultyFolder,
+  );
 
   let options = {
     method: 'GET',

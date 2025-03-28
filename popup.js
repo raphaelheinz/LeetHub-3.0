@@ -36,6 +36,23 @@ $('#toggle-icon').click(() => {
   });
 });
 
+// Toggle difficulty folder section
+$('#toggle-folder-icon').click(() => {
+  $('#toggle-folder-icon').toggleClass('open');
+  $('#difficulty-folder-container').toggle();
+
+  // Load from storage: use default value 'false' if not set
+  chrome.storage.local.get({ useDifficultyFolder: false }, data => {
+    $('#use-difficulty-folder').prop('checked', data.useDifficultyFolder);
+  });
+});
+
+// Store Switch State
+$('#use-difficulty-folder').change(function () {
+  const isChecked = $(this).is(':checked');
+  chrome.storage.local.set({ useDifficultyFolder: isChecked });
+});
+
 $('#msg-save-btn').click(() => {
   const commitMessage = $('#custom-commit-msg').val();
   chrome.runtime.sendMessage({ action: 'customCommitMessageUpdated', message: commitMessage.trim() });
