@@ -843,7 +843,7 @@ LeetCodeV2.prototype.init = async function () {
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const submissionDetailsQuery = {
     query:
-      '\n    query submissionDetails($submissionId: Int!) {\n  submissionDetails(submissionId: $submissionId) {\n    runtime\n    runtimeDisplay\n    runtimePercentile\n    runtimeDistribution\n    memory\n    memoryDisplay\n    memoryPercentile\n    memoryDistribution\n    code\n    timestamp\n    statusCode\n    lang {\n      name\n      verboseName\n    }\n    question {\n      questionId\n    title\n    titleSlug\n    content\n    difficulty\n    }\n    notes\n    topicTags {\n      tagId\n      slug\n      name\n    }\n    runtimeError\n  }\n}\n    ',
+      '\n    query submissionDetails($submissionId: Int!) {\n  submissionDetails(submissionId: $submissionId) {\n    runtime\n    runtimeDisplay\n    runtimePercentile\n    runtimeDistribution\n    memory\n    memoryDisplay\n    memoryPercentile\n    memoryDistribution\n    code\n    timestamp\n    statusCode\n    lang {\n      name\n      verboseName\n    }\n    question {\n      questionId\n    questionFrontendId\n    title\n    titleSlug\n    content\n    difficulty\n    }\n    notes\n    topicTags {\n      tagId\n      slug\n      name\n    }\n    runtimeError\n  }\n}\n    ',
     variables: { submissionId: submissionId },
     operationName: 'submissionDetails',
   };
@@ -916,7 +916,7 @@ LeetCodeV2.prototype.getNotesIfAny = function () { };
 
 
 LeetCodeV2.prototype.extractQuestionNumber = function() {
-  let qNum = this.submissionData.question.questionId; // Default to questionId
+  let qNum = this.submissionData.question.questionFrontendId;
 
   const content = document.getElementById("qd-content");
   if (content) {
