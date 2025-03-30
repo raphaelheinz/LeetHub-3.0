@@ -90,7 +90,7 @@ const getCustomCommitMessage = (problemContext) => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get('custom_commit_message', (result) => {
       if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError); 
+        reject(chrome.runtime.lastError);
       } else if (!result.custom_commit_message || !result.custom_commit_message.trim()) {
         resolve(null) // no custom message is set
       } else {
@@ -1242,7 +1242,7 @@ const loader = (leetCode, suffix) => {
           false,
         );
       }
-      
+
       const problemContext = {
         "time": `${probStats.time} (${probStats.timePercentile}%)`,
         "space": `${probStats.space} (${probStats.spacePercentile}%)`,
