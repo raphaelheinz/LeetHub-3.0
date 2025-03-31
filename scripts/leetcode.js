@@ -26,7 +26,7 @@ const languages = {
   Scala: '.scala',
   Swift: '.swift',
   TypeScript: '.ts',
-}
+};
 
 /* Commit messages */
 const readmeMsg = 'Create README - LeetHub';
@@ -82,24 +82,27 @@ const parseCustomCommitMessage = (text, problemContext) => {
   return text.replace(/{(\w+)}/g, (match, key) => {
     // check if the variable exists in the problemContext and replace the matching text
     return problemContext.hasOwnProperty(key) ? problemContext[key] : match;
-});
-}
+  });
+};
 
 /* returns custom commit message or null if doesn't exist */
-const getCustomCommitMessage = (problemContext) => {
+const getCustomCommitMessage = problemContext => {
   return new Promise((resolve, reject) => {
-    chrome.storage.local.get('custom_commit_message', (result) => {
+    chrome.storage.local.get('custom_commit_message', result => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else if (!result.custom_commit_message || !result.custom_commit_message.trim()) {
-        resolve(null) // no custom message is set
+        resolve(null); // no custom message is set
       } else {
-        const finalCommitMessage = parseCustomCommitMessage(result.custom_commit_message, problemContext)
+        const finalCommitMessage = parseCustomCommitMessage(
+          result.custom_commit_message,
+          problemContext,
+        );
         resolve(finalCommitMessage);
       }
     });
   });
-}
+};
 
 /* Main function for uploading code to GitHub repo, and callback cb is called if success */
 const upload = (
@@ -227,12 +230,12 @@ const update = (
     .then(existingContent =>
       shouldPreprendDiscussionPosts
         ? // https://web.archive.org/web/20190623091645/https://monsur.hossa.in/2012/07/20/utf-8-in-javascript.html
-        // In order to preserve mutation of the data, we have to encode it, which is usually done in base64.
-        // But btoa only accepts ASCII 7 bit chars (0-127) while Javascript uses 16-bit minimum chars (0-65535).
-        // EncodeURIComponent converts the Unicode Points UTF-8 bits to hex UTF-8.
-        // Unescape converts percent-encoded hex values into regular ASCII (optional; it shrinks string size).
-        // btoa converts ASCII to base64.
-        btoa(unescape(encodeURIComponent(addition + existingContent)))
+          // In order to preserve mutation of the data, we have to encode it, which is usually done in base64.
+          // But btoa only accepts ASCII 7 bit chars (0-127) while Javascript uses 16-bit minimum chars (0-65535).
+          // EncodeURIComponent converts the Unicode Points UTF-8 bits to hex UTF-8.
+          // Unescape converts percent-encoded hex values into regular ASCII (optional; it shrinks string size).
+          // btoa converts ASCII to base64.
+          btoa(unescape(encodeURIComponent(addition + existingContent)))
         : btoa(unescape(encodeURIComponent(existingContent))),
     )
     .then(newContent =>
@@ -415,18 +418,21 @@ function formatStats(time, timePercentile, space, spacePercentile) {
   return `Time: ${time} (${timePercentile}%), Space: ${space} (${spacePercentile}%) - LeetHub`;
 }
 
-function getGitIcon(){
+function getGitIcon() {
   // Create an SVG element
-  var gitSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  var gitSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   gitSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   gitSvg.setAttribute('width', '24');
   gitSvg.setAttribute('height', '24');
   gitSvg.setAttribute('viewBox', '0 0 114.8625 114.8625');
 
   // Create a path element inside the SVG
-  var gitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  var gitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   gitPath.setAttribute('fill', '#100f0d');
-  gitPath.setAttribute('d', 'm112.693375 52.3185-50.149-50.146875c-2.886625-2.88875-7.57075-2.88875-10.461375 0l-10.412625 10.4145 13.2095 13.2095C57.94975 24.759 61.47025 25.45475 63.9165 27.9015c2.461 2.462 3.150875 6.01275 2.087375 9.09375l12.732 12.7305c3.081-1.062 6.63325-.3755 9.09425 2.088875 3.4375 3.4365 3.4375 9.007375 0 12.44675-3.44 3.4395-9.00975 3.4395-12.45125 0-2.585375-2.587875-3.225125-6.387125-1.914-9.57275l-11.875-11.874V74.06075c.837375.415 1.628375.96775 2.326625 1.664 3.4375 3.437125 3.4375 9.007375 0 12.44975-3.4375 3.436-9.01125 3.436-12.44625 0-3.4375-3.442375-3.4375-9.012625 0-12.44975.849625-.848625 1.8335-1.490625 2.88325-1.920375V42.26925c-1.04975-.42975-2.03125-1.066375-2.88325-1.920875-2.6035-2.602625-3.23-6.424375-1.894625-9.622125L36.55325 17.701875 2.1660125 52.086125c-2.88818 2.891125-2.88818 7.57525 0 10.463875l50.1513625 50.146975c2.88725 2.88818125 7.569875 2.88818125 10.461375 0l49.914625-49.9146c2.889625-2.889125 2.889625-7.575625 0-10.463875');
+  gitPath.setAttribute(
+    'd',
+    'm112.693375 52.3185-50.149-50.146875c-2.886625-2.88875-7.57075-2.88875-10.461375 0l-10.412625 10.4145 13.2095 13.2095C57.94975 24.759 61.47025 25.45475 63.9165 27.9015c2.461 2.462 3.150875 6.01275 2.087375 9.09375l12.732 12.7305c3.081-1.062 6.63325-.3755 9.09425 2.088875 3.4375 3.4365 3.4375 9.007375 0 12.44675-3.44 3.4395-9.00975 3.4395-12.45125 0-2.585375-2.587875-3.225125-6.387125-1.914-9.57275l-11.875-11.874V74.06075c.837375.415 1.628375.96775 2.326625 1.664 3.4375 3.437125 3.4375 9.007375 0 12.44975-3.4375 3.436-9.01125 3.436-12.44625 0-3.4375-3.442375-3.4375-9.012625 0-12.44975.849625-.848625 1.8335-1.490625 2.88325-1.920375V42.26925c-1.04975-.42975-2.03125-1.066375-2.88325-1.920875-2.6035-2.602625-3.23-6.424375-1.894625-9.622125L36.55325 17.701875 2.1660125 52.086125c-2.88818 2.891125-2.88818 7.57525 0 10.463875l50.1513625 50.146975c2.88725 2.88818125 7.569875 2.88818125 10.461375 0l49.914625-49.9146c2.889625-2.889125 2.889625-7.575625 0-10.463875',
+  );
 
   gitSvg.appendChild(gitPath);
   return gitSvg;
@@ -487,11 +493,10 @@ document.addEventListener('click', event => {
   /* Complex since "New" button shares many of the same properties as "Post button */
   if (
     element.classList.contains('icon__3Su4') ||
-    (element.parentElement != null && (
-      element.parentElement.classList.contains('icon__3Su4') ||
-      element.parentElement.classList.contains('btn-content-container__214G') ||
-      element.parentElement.classList.contains('header-right__2UzF')
-    ))
+    (element.parentElement != null &&
+      (element.parentElement.classList.contains('icon__3Su4') ||
+        element.parentElement.classList.contains('btn-content-container__214G') ||
+        element.parentElement.classList.contains('header-right__2UzF')))
   ) {
     setTimeout(function () {
       /* Only post if post button was clicked and url changed */
@@ -499,7 +504,7 @@ document.addEventListener('click', event => {
         oldPath !== window.location.pathname &&
         oldPath === window.location.pathname.substring(0, oldPath.length) &&
         !Number.isNaN(window.location.pathname.charAt(oldPath.length))
-        ) {
+      ) {
         const date = new Date();
         const currentDate = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} at ${date.getHours()}:${date.getMinutes()}`;
         const addition = `[Discussion Post (created on ${currentDate})](${window.location})  \n`;
@@ -516,7 +521,7 @@ function LeetCodeV1() {
   this.progressSpinnerElementClass = 'leethub_progress';
   this.injectSpinnerStyle();
 }
-LeetCodeV1.prototype.init = async function () { };
+LeetCodeV1.prototype.init = async function () {};
 /* Function for finding and parsing the full code. */
 /* - At first find the submission details url. */
 /* - Then send a request for the details page. */
@@ -834,11 +839,11 @@ function LeetCodeV2() {
 LeetCodeV2.prototype.init = async function () {
   const problem = document.URL.match(/leetcode.com\/problems\/([^\/]*)\//);
   const val = await chrome.storage.local.get(problem[1]);
-  if(!val){
-    alert("Have you submitted this problem yet?");
+  if (!val) {
+    alert('Have you submitted this problem yet?');
     return false;
   }
-  const submissionId = val[problem[1]]
+  const submissionId = val[problem[1]];
 
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const submissionDetailsQuery = {
@@ -912,13 +917,12 @@ LeetCodeV2.prototype.getLanguageExtension = function () {
 
   return languages[lang];
 };
-LeetCodeV2.prototype.getNotesIfAny = function () { };
+LeetCodeV2.prototype.getNotesIfAny = function () {};
 
-
-LeetCodeV2.prototype.extractQuestionNumber = function() {
+LeetCodeV2.prototype.extractQuestionNumber = function () {
   let qNum = this.submissionData.question.questionFrontendId;
 
-  const content = document.getElementById("qd-content");
+  const content = document.getElementById('qd-content');
   if (content) {
     const elementSelector = 'a[href^="/problems/' + window.location.pathname.split('/')[2] + '/"]';
     const titleElement = content.querySelector(elementSelector);
@@ -929,10 +933,10 @@ LeetCodeV2.prototype.extractQuestionNumber = function() {
         qNum = numbersMatch[1]; // Update qNum if a number is found
       }
     } else {
-      console.log("Element for number not found in the specified container.");
+      console.log('Element for number not found in the specified container.');
     }
   } else {
-    console.log("Content div not found.");
+    console.log('Content div not found.');
   }
   return qNum;
 };
@@ -963,15 +967,15 @@ LeetCodeV2.prototype.parseStats = function () {
     const spacePercentile =
       Math.round((this.submissionData.memoryPercentile + Number.EPSILON) * 100) / 100;
     return {
-      "time": this.submissionData.runtimeDisplay,
-      "timePercentile": runtimePercentile,
-      "space": this.submissionData.memoryDisplay,
-      "spacePercentile": spacePercentile,
+      time: this.submissionData.runtimeDisplay,
+      timePercentile: runtimePercentile,
+      space: this.submissionData.memoryDisplay,
+      spacePercentile: spacePercentile,
     };
   }
 
   // Doesn't work unless we wait for page to finish loading.
-  setTimeout(() => { }, 1000);
+  setTimeout(() => {}, 1000);
   const probStats = document.getElementsByClassName('flex w-full pb-4')[0].innerText.split('\n');
   if (!checkElem(probStats)) {
     return null;
@@ -1103,13 +1107,14 @@ LeetCodeV2.prototype.markUploadFailed = function () {
 LeetCodeV2.prototype.addManualSubmitButton = function () {
   let elem = document.getElementById('manualGitSubmit');
   const domain = document.URL.match(/:\/\/(www\.)?(.[^/:]+)/)[2].split('.')[0];
-  if (elem || domain != 'leetcode' ) {
+  if (elem || domain != 'leetcode') {
     return;
   }
 
   var submitButton = document.createElement('button');
   submitButton.id = 'manualGitSubmit';
-  submitButton.className = 'relative inline-flex gap-2 items-center justify-center font-medium cursor-pointer focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-colors bg-transparent enabled:hover:bg-fill-secondary enabled:active:bg-fill-primary text-caption rounded text-text-primary group ml-auto p-1';
+  submitButton.className =
+    'relative inline-flex gap-2 items-center justify-center font-medium cursor-pointer focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 transition-colors bg-transparent enabled:hover:bg-fill-secondary enabled:active:bg-fill-primary text-caption rounded text-text-primary group ml-auto p-1';
   submitButton.textContent = 'Push ';
   submitButton.appendChild(getGitIcon());
   submitButton.appendChild(getToolTip());
@@ -1132,10 +1137,10 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
 };
 
 /* Validate if string can be added as suffix. Can add more constrains if necessary. */
-function isValidSuffix (string) {
+function isValidSuffix(string) {
   if (!string || string.length > 255) {
-		return false;
-	}
+    return false;
+  }
   return true;
 }
 
@@ -1143,10 +1148,10 @@ LeetCodeV2.prototype.addUrlChangeListener = function () {
   window.navigation.addEventListener('navigate', event => {
     const problem = window.location.href.match(/leetcode.com\/problems\/(.*)\/submissions/);
     const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
-    if(problem && problem.length > 1 && submissionId && submissionId.length > 1){
+    if (problem && problem.length > 1 && submissionId && submissionId.length > 1) {
       chrome.storage.local.set({ [problem[1]]: submissionId[1] });
     }
-  })
+  });
 };
 
 /* Sync to local storage */
@@ -1158,7 +1163,7 @@ chrome.storage.local.get('isSync', data => {
     'stats',
     'leethub_hook',
     'mode_type',
-    'custom_commit_message'
+    'custom_commit_message',
   ];
   if (!data || !data.isSync) {
     keys.forEach(key => {
@@ -1244,15 +1249,15 @@ const loader = (leetCode, suffix) => {
       }
 
       const problemContext = {
-        "time": `${probStats.time} (${probStats.timePercentile}%)`,
-        "space": `${probStats.space} (${probStats.spacePercentile}%)`,
-        "language": language,
-        "problemName": problemName,
-        "difficulty": difficulty,
-        "date": getTodaysDate()
-      }
+        time: `${probStats.time} (${probStats.timePercentile}%)`,
+        space: `${probStats.space} (${probStats.spacePercentile}%)`,
+        language: language,
+        problemName: problemName,
+        difficulty: difficulty,
+        date: getTodaysDate(),
+      };
       const probStatsCommitMsg = `Time: ${probStats.time} (${probStats.timePercentile}%), Space: ${probStats.space} (${probStats.spacePercentile}%) - LeetHub`; // default commit
-      const commitMsg = await getCustomCommitMessage(problemContext) || probStatsCommitMsg;
+      const commitMsg = (await getCustomCommitMessage(problemContext)) || probStatsCommitMsg;
 
       /* Upload code to Git */
       const updateCode = leetCode.findAndUploadCode(
@@ -1296,9 +1301,14 @@ const observer = new MutationObserver(function (_mutations, observer) {
   const v1SubmitBtn = document.querySelector('[data-cy="submit-code-btn"]');
   const v2SubmitBtn = document.querySelector('[data-e2e-locator="console-submit-button"]');
   const textareaList = document.getElementsByTagName('textarea');
-  const textarea = textareaList.length === 4 ? textareaList[2] : (textareaList.length === 2 ? textareaList[0] : textareaList[1]);
+  const textarea =
+    textareaList.length === 4
+      ? textareaList[2]
+      : textareaList.length === 2
+        ? textareaList[0]
+        : textareaList[1];
 
-  if(v1SubmitBtn) {
+  if (v1SubmitBtn) {
     observer.disconnect();
 
     const leetCode = new LeetCodeV1();
@@ -1306,7 +1316,7 @@ const observer = new MutationObserver(function (_mutations, observer) {
     return;
   }
 
-  if(v2SubmitBtn && textarea) {
+  if (v2SubmitBtn && textarea) {
     observer.disconnect();
 
     const leetCode = new LeetCodeV2();

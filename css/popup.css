@@ -98,12 +98,12 @@ body {
   display: inline-flex;
   fill: #000;
   justify-content: center;
-  letter-spacing: -.8px;
+  letter-spacing: -0.8px;
   outline: 0;
   padding: 0 17px;
   text-align: center;
   text-decoration: none;
-  transition: all .3s;
+  transition: all 0.3s;
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
