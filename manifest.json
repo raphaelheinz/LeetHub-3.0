@@ -7,7 +7,7 @@
   "author": "Raphael Heinz",
   "action": {
     "default_icon": "assets/thumbnail.png",
-    "default_popup": "popup.html"
+    "default_popup": "src/html/popup.html"
   },
   "icons": {
     "16": "assets/thumbnail.png",
@@ -15,7 +15,7 @@
     "128": "assets/thumbnail.png"
   },
   "background": {
-    "service_worker": "scripts/background.js"
+    "service_worker": "src/js/background.js"
   },
   "permissions": [
     "unlimitedStorage",
@@ -28,8 +28,8 @@
         "https://github.com/*"
       ],
       "js": [
-        "scripts/leetcode.js",
-        "scripts/authorize.js"
+        "src/js/leetcode.js",
+        "src/js/authorize.js"
       ],
       "run_at": "document_idle"
     }

@@ -8,13 +8,13 @@ $('#authenticate').on('click', () => {
   }
 });
 
-$('#welcome_URL').attr('href', chrome.runtime.getURL('welcome.html'));
+$('#welcome_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
 
-$('#hook_URL').attr('href', chrome.runtime.getURL('welcome.html'));
+$('#hook_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
 
-$('#toggle-icon').click(() => {
-  $('#toggle-icon').toggleClass('open');
-  $('#customize-message-container').toggle();
+$('#collapsible-commit-message-icon').click(() => {
+  $('#collapsible-commit-message-icon').toggleClass('open');
+  $('#collapsible-commit-message-container').toggle();
   chrome.storage.local.get(['custom_commit_message'], data => {
     console.log('data after toggling', data);
     let commitMessage = data.custom_commit_message;
@@ -30,9 +30,9 @@ $('#toggle-icon').click(() => {
 });
 
 // Toggle difficulty folder section
-$('#toggle-folder-icon').click(() => {
-  $('#toggle-folder-icon').toggleClass('open');
-  $('#difficulty-folder-container').toggle();
+$('#collapsible-difficulty-icon').click(() => {
+  $('#collapsible-difficulty-icon').toggleClass('open');
+  $('#collapsible-difficulty-container').toggle();
 
   // Load from storage: use default value 'false' if not set
   chrome.storage.local.get({ useDifficultyFolder: false }, data => {

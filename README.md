@@ -73,7 +73,7 @@ In the meantime, we have added a manual synchronization button next to notes ico
         * Authorization callback URL: https://github.com/
     * Download the project ZIP (<a href="https://github.com/raphaelheinz/LeetHub-3.0/releases">Releases</a>) or clone this repository
     * Run ```npm run setup``` to install the developer dependencies
-    * Update CLIENT_ID and CLIENT_SECRET in ```scripts/authorize.js``` and ```scripts/oauth2.js``` with your ids
+    * Update CLIENT_ID and CLIENT_SECRET in ```src/js/authorize.js``` and ```src/js/oauth2.js``` with your ids
     * Go to <a href="chrome://extensions">chrome://extensions</a>
     * Enable <a href="https://www.mstoic.com/enable-developer-mode-in-chrome/">Developer mode</a> by toggling the switch on top right corner
     * Click **"Load unpacked"**
