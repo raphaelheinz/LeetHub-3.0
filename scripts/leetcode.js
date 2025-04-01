@@ -912,28 +912,11 @@ LeetCodeV2.prototype.getLanguageExtension = function () {
 
   return languages[lang];
 };
+
 LeetCodeV2.prototype.getNotesIfAny = function () {};
 
 LeetCodeV2.prototype.extractQuestionNumber = function () {
-  let qNum = this.submissionData.question.questionFrontendId;
-
-  const content = document.getElementById('qd-content');
-  if (content) {
-    const elementSelector = 'a[href^="/problems/' + window.location.pathname.split('/')[2] + '/"]';
-    const titleElement = content.querySelector(elementSelector);
-
-    if (titleElement) {
-      const numbersMatch = titleElement.textContent.match(/(\d+)\./);
-      if (numbersMatch) {
-        qNum = numbersMatch[1]; // Update qNum if a number is found
-      }
-    } else {
-      console.log('Element for number not found in the specified container.');
-    }
-  } else {
-    console.log('Content div not found.');
-  }
-  return qNum;
+  return this.submissionData.question.questionFrontendId;
 };
 
 /**
