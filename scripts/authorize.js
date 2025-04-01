@@ -24,10 +24,10 @@ const localAuth = {
    */
   parseAccessCode(url) {
     if (url.match(/\?error=(.+)/)) {
-      chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         var tab = tabs[0];
-        chrome.tabs.remove(tab.id, function() {})
-    });
+        chrome.tabs.remove(tab.id, function () {});
+      });
     } else {
       // eslint-disable-next-line
       this.requestToken(url.match(/\?code=([\w\/\-]+)/)[1]);
@@ -50,9 +50,7 @@ const localAuth = {
     xhr.addEventListener('readystatechange', function () {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
-          that.finish(
-            xhr.responseText.match(/access_token=([^&]*)/)[1],
-          );
+          that.finish(xhr.responseText.match(/access_token=([^&]*)/)[1]);
         } else {
           chrome.runtime.sendMessage({
             closeWebPage: true,
@@ -101,7 +99,7 @@ const link = window.location.href;
 
 /* Check for open pipe */
 if (window.location.host === 'github.com') {
-  chrome.storage.local.get('pipe_leethub', (data) => {
+  chrome.storage.local.get('pipe_leethub', data => {
     if (data && data.pipe_leethub) {
       localAuth.parseAccessCode(link);
     }

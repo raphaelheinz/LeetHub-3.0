@@ -33,10 +33,6 @@ const readmeMsg = 'Create README - LeetHub';
 const discussionMsg = 'Prepend discussion post - LeetHub';
 const createNotesMsg = 'Attach NOTES - LeetHub';
 
-// problem types
-const NORMAL_PROBLEM = 0;
-const EXPLORE_SECTION_PROBLEM = 1;
-
 // SubFolder
 const basePath = 'LeetCode';
 
@@ -80,8 +76,7 @@ function constructGitHubPath(hook, basePath, difficulty, problem, filename, useD
 
 const parseCustomCommitMessage = (text, problemContext) => {
   return text.replace(/{(\w+)}/g, (match, key) => {
-    // check if the variable exists in the problemContext and replace the matching text
-    return problemContext.hasOwnProperty(key) ? problemContext[key] : match;
+    return Object.prototype.hasOwnProperty.call(problemContext, key) ? problemContext[key] : match;
   });
 };
 
@@ -155,7 +150,7 @@ const upload = (
     })
     .then(async body => {
       updatedSha = body.content.sha; // get updated SHA.
-      stats = await getAndInitializeStats(problem);
+      const stats = await getAndInitializeStats(problem);
       stats.shas[problem][filename] = updatedSha;
       return chrome.storage.local.set({ stats });
     })
@@ -399,8 +394,8 @@ function convertToSlug(string) {
     .replace(/\s+/g, '-') // Replace spaces with -
     .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
     .replace(/&/g, '-and-') // Replace & with 'and'
-    .replace(/[^\w\-]+/g, '') // Remove all non-word characters
-    .replace(/\-\-+/g, '-') // Replace multiple - with single -
+    .replace(/[^\w-]+/g, '') // Remove all non-word characters
+    .replace(/--+/g, '-') // Replace multiple - with single -
     .replace(/^-+/, '') // Trim - from start of text
     .replace(/-+$/, ''); // Trim - from end of text
 }
@@ -635,7 +630,7 @@ LeetCodeV1.prototype.getNotesIfAny = function () {
   // there are no notes on expore
   if (document.URL.startsWith('https://leetcode.com/explore/')) return '';
 
-  notes = '';
+  let notes = '';
   if (
     checkElem(document.getElementsByClassName('notewrap__eHkN')) &&
     checkElem(
@@ -644,13 +639,13 @@ LeetCodeV1.prototype.getNotesIfAny = function () {
         .getElementsByClassName('CodeMirror-code'),
     )
   ) {
-    notesdiv = document
+    const notesdiv = document
       .getElementsByClassName('notewrap__eHkN')[0]
       .getElementsByClassName('CodeMirror-code')[0];
     if (notesdiv) {
-      for (i = 0; i < notesdiv.childNodes.length; i++) {
+      for (let i = 0; i < notesdiv.childNodes.length; i++) {
         if (notesdiv.childNodes[i].childNodes.length == 0) continue;
-        text = notesdiv.childNodes[i].childNodes[0].innerText;
+        const text = notesdiv.childNodes[i].childNodes[0].innerText;
         if (text) {
           notes = `${notes}\n${text.trim()}`.trim();
         }
@@ -768,14 +763,14 @@ LeetCodeV1.prototype.parseQuestion = function () {
 /* Injects a spinner on left side to the "Run Code" button */
 LeetCodeV1.prototype.startSpinner = function () {
   try {
-    elem = document.getElementById('leethub_progress_anchor_element');
+    let elem = document.getElementById('leethub_progress_anchor_element');
     if (!elem) {
       elem = document.createElement('span');
       elem.id = 'leethub_progress_anchor_element';
       elem.style = 'margin-right: 20px;padding-top: 2px;';
     }
     elem.innerHTML = `<div id="${this.progressSpinnerElementId}" class="${this.progressSpinnerElementClass}"></div>`;
-    target = this.insertToAnchorElement(elem);
+    this.insertToAnchorElement(elem);
     uploadState.uploading = true;
   } catch (error) {
     console.log(error);
@@ -790,20 +785,22 @@ LeetCodeV1.prototype.injectSpinnerStyle = function () {
 /* Inserts an anchor element that is specific to the page you are on (e.g. Explore) */
 LeetCodeV1.prototype.insertToAnchorElement = function (elem) {
   if (document.URL.startsWith('https://leetcode.com/explore/')) {
-    action = document.getElementsByClassName('action');
+    const action = document.getElementsByClassName('action');
     if (
       checkElem(action) &&
       checkElem(action[0].getElementsByClassName('row')) &&
       checkElem(action[0].getElementsByClassName('row')[0].getElementsByClassName('col-sm-6')) &&
       action[0].getElementsByClassName('row')[0].getElementsByClassName('col-sm-6').length > 1
     ) {
-      target = action[0].getElementsByClassName('row')[0].getElementsByClassName('col-sm-6')[1];
+      const target = action[0]
+        .getElementsByClassName('row')[0]
+        .getElementsByClassName('col-sm-6')[1];
       elem.className = 'pull-left';
       if (target.childNodes.length > 0) target.childNodes[0].prepend(elem);
     }
   } else {
     if (checkElem(document.getElementsByClassName('action__38Xc'))) {
-      target = document.getElementsByClassName('action__38Xc')[0];
+      const target = document.getElementsByClassName('action__38Xc')[0];
       elem.className = 'runcode-wrapper__8rXm';
       if (target.childNodes.length > 0) target.childNodes[0].prepend(elem);
     }
@@ -811,22 +808,20 @@ LeetCodeV1.prototype.insertToAnchorElement = function (elem) {
 };
 /* Creates a ✔️ tick mark before "Run Code" button signaling LeetHub has done its job */
 LeetCodeV1.prototype.markUploaded = function () {
-  elem = document.getElementById(this.progressSpinnerElementId);
+  const elem = document.getElementById(this.progressSpinnerElementId);
   if (elem) {
     elem.className = '';
-    style =
+    elem.style =
       'display: inline-block;transform: rotate(45deg);height:24px;width:12px;border-bottom:7px solid #78b13f;border-right:7px solid #78b13f;';
-    elem.style = style;
   }
 };
 /* Creates a ❌ failed tick mark before "Run Code" button signaling that upload failed */
 LeetCodeV1.prototype.markUploadFailed = function () {
-  elem = document.getElementById(this.progressSpinnerElementId);
+  const elem = document.getElementById(this.progressSpinnerElementId);
   if (elem) {
     elem.className = '';
-    style =
+    elem.style =
       'display: inline-block;transform: rotate(45deg);height:24px;width:12px;border-bottom:7px solid red;border-right:7px solid red;';
-    elem.style = style;
   }
 };
 
@@ -837,7 +832,7 @@ function LeetCodeV2() {
   this.injectSpinnerStyle();
 }
 LeetCodeV2.prototype.init = async function () {
-  const problem = document.URL.match(/leetcode.com\/problems\/([^\/]*)\//);
+  const problem = document.URL.match(/leetcode.com\/problems\/([^/]*)\//);
   const val = await chrome.storage.local.get(problem[1]);
   if (!val) {
     alert('Have you submitted this problem yet?');
@@ -1089,18 +1084,16 @@ LeetCodeV2.prototype.markUploaded = function () {
   let elem = document.getElementById(this.progressSpinnerElementId);
   if (elem) {
     elem.className = '';
-    style =
+    elem.style =
       'display: inline-block;transform: rotate(45deg);height:24px;width:12px;border-bottom:7px solid #78b13f;border-right:7px solid #78b13f;';
-    elem.style = style;
   }
 };
 LeetCodeV2.prototype.markUploadFailed = function () {
   let elem = document.getElementById(this.progressSpinnerElementId);
   if (elem) {
     elem.className = '';
-    style =
+    elem.style =
       'display: inline-block;transform: rotate(45deg);height:24px;width:12px;border-bottom:7px solid red;border-right:7px solid red;';
-    elem.style = style;
   }
 };
 
@@ -1145,7 +1138,7 @@ function isValidSuffix(string) {
 }
 
 LeetCodeV2.prototype.addUrlChangeListener = function () {
-  window.navigation.addEventListener('navigate', event => {
+  window.navigation.addEventListener('navigate', _ => {
     const problem = window.location.href.match(/leetcode.com\/problems\/(.*)\/submissions/);
     const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
     if (problem && problem.length > 1 && submissionId && submissionId.length > 1) {
@@ -1156,7 +1149,7 @@ LeetCodeV2.prototype.addUrlChangeListener = function () {
 
 /* Sync to local storage */
 chrome.storage.local.get('isSync', data => {
-  keys = [
+  const keys = [
     'leethub_token',
     'leethub_username',
     'pipe_leethub',
@@ -1171,7 +1164,7 @@ chrome.storage.local.get('isSync', data => {
         chrome.storage.local.set({ [key]: data[key] });
       });
     });
-    chrome.storage.local.set({ isSync: true }, data => {
+    chrome.storage.local.set({ isSync: true }, _ => {
       console.log('LeetHub Synced to local values');
     });
   } else {
@@ -1235,7 +1228,7 @@ const loader = (leetCode, suffix) => {
       });
 
       /* Upload Notes if any*/
-      notes = leetCode.getNotesIfAny();
+      let notes = leetCode.getNotesIfAny();
       let updateNotes;
       if (notes != undefined && notes.length > 0) {
         updateNotes = uploadGit(

@@ -1,5 +1,4 @@
 /* global oAuth2 */
-/* eslint no-undef: "error" */
 
 let action = false;
 
@@ -9,26 +8,20 @@ $('#authenticate').on('click', () => {
   }
 });
 
-$('#welcome_URL').attr(
-  'href',
-  chrome.runtime.getURL('welcome.html')
-);
+$('#welcome_URL').attr('href', chrome.runtime.getURL('welcome.html'));
 
-$('#hook_URL').attr(
-  'href',
-  chrome.runtime.getURL('welcome.html')
-);
+$('#hook_URL').attr('href', chrome.runtime.getURL('welcome.html'));
 
 $('#toggle-icon').click(() => {
   $('#toggle-icon').toggleClass('open');
-  $('#customize-message-container').toggle(); 
-  chrome.storage.local.get(['custom_commit_message'], (data) => {
-    console.log("data after toggling", data)
+  $('#customize-message-container').toggle();
+  chrome.storage.local.get(['custom_commit_message'], data => {
+    console.log('data after toggling', data);
     let commitMessage = data.custom_commit_message;
 
     // if null, undefined, or an empty string, set default placeholder
     if (!commitMessage) {
-      $('#custom-commit-msg').attr('placeholder', "Time: {time}, Space: {space} - LeetHub");
+      $('#custom-commit-msg').attr('placeholder', 'Time: {time}, Space: {space} - LeetHub');
     } else {
       $('#custom-commit-msg').attr('placeholder', commitMessage);
       $('#custom-commit-msg').val(commitMessage);
@@ -55,30 +48,33 @@ $('#use-difficulty-folder').change(function () {
 
 $('#msg-save-btn').click(() => {
   const commitMessage = $('#custom-commit-msg').val();
-  chrome.runtime.sendMessage({ action: 'customCommitMessageUpdated', message: commitMessage.trim() });
+  chrome.runtime.sendMessage({
+    action: 'customCommitMessageUpdated',
+    message: commitMessage.trim(),
+  });
 
   const successMessage = $('#success-message');
   successMessage.show();
   setTimeout(() => {
     successMessage.hide();
-  }, 3000)
+  }, 3000);
 });
 
 $('#msg-reset-btn').click(() => {
-  $("#custom-commit-msg").val("")
-  $('#custom-commit-msg').attr('placeholder', "Time: {time}, Space: {space} - LeetHub"); // reset to default
+  $('#custom-commit-msg').val('');
+  $('#custom-commit-msg').attr('placeholder', 'Time: {time}, Space: {space} - LeetHub'); // reset to default
   chrome.runtime.sendMessage({ action: 'customCommitMessageUpdated', message: null });
-})
+});
 
 /* when variable is clicked, add to custom commit message text area*/
-$('.commit-variable').on('click', function() {
+$('.commit-variable').on('click', function () {
   var variableName = $(this).attr('id');
-  $('#custom-commit-msg').val(function(index, currentValue) {
+  $('#custom-commit-msg').val(function (index, currentValue) {
     return currentValue + `{${variableName}} `;
   });
 });
 
-chrome.storage.local.get('leethub_token', (data) => {
+chrome.storage.local.get('leethub_token', data => {
   const token = data.leethub_token;
   if (token === null || token === undefined) {
     action = true;
@@ -92,28 +88,25 @@ chrome.storage.local.get('leethub_token', (data) => {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           /* Show MAIN FEATURES */
-          chrome.storage.local.get('mode_type', (data2) => {
+          chrome.storage.local.get('mode_type', data2 => {
             if (data2 && data2.mode_type === 'commit') {
               $('#commit_mode').show();
               /* Get problem stats and repo link */
-              chrome.storage.local.get(
-                ['stats', 'leethub_hook'],
-                (data3) => {
-                  const { stats } = data3;
-                  if (stats && stats.solved) {
-                    $('#p_solved').text(stats.solved);
-                    $('#p_solved_easy').text(stats.easy);
-                    $('#p_solved_medium').text(stats.medium);
-                    $('#p_solved_hard').text(stats.hard);
-                  }
-                  const leethubHook = data3.leethub_hook;
-                  if (leethubHook) {
-                    $('#repo_url').html(
-                      `<a target="blank" style="color: cadetblue !important; font-size:0.8em;" href="https://github.com/${leethubHook}">${leethubHook}</a>`,
-                    );
-                  }
-                },
-              );
+              chrome.storage.local.get(['stats', 'leethub_hook'], data3 => {
+                const { stats } = data3;
+                if (stats && stats.solved) {
+                  $('#p_solved').text(stats.solved);
+                  $('#p_solved_easy').text(stats.easy);
+                  $('#p_solved_medium').text(stats.medium);
+                  $('#p_solved_hard').text(stats.hard);
+                }
+                const leethubHook = data3.leethub_hook;
+                if (leethubHook) {
+                  $('#repo_url').html(
+                    `<a target="blank" style="color: cadetblue !important; font-size:0.8em;" href="https://github.com/${leethubHook}">${leethubHook}</a>`,
+                  );
+                }
+              });
             } else {
               $('#hook_mode').show();
             }
