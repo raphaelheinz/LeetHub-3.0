@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LeetHub v3",
+  "name": "LeetHub-3.0",
   "description": "Automatically integrate your Leetcode submissions to GitHub",
   "homepage_url": "https://github.com/raphaelheinz/LeetHub-3.0",
   "version": "0.0.14",
