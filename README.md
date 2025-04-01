@@ -1,5 +1,6 @@
-
-# LeetHub-3.0 - Sync your code with GitHub
+<div align="center">
+    <img src="assets/logo.png" alt="LeetHub-3.0">
+</div>
 
 <p align="center">
   <a href="https://github.com/raphaelheinz/LeetHub-3.0/blob/main/LICENSE">
@@ -15,10 +16,6 @@
     <img src="https://img.shields.io/github/contributors/raphaelheinz/LeetHub-3.0" />
   </a>
 </p>
-<h1 align="center">
-    <img src="assets/octocode.png" alt="LeetHub-3.0" width="400">
-</h1>
-
 
 ## What is LeetHub-3.0?
 
