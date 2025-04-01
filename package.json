@@ -1,20 +1,23 @@
 {
-  "name": "LeetHub v3",
+  "name": "leethub-3",
   "version": "0.0.2",
+  "type": "module",
   "private": true,
   "description": "Automatically integrate your code with LeetCode and GitHub",
   "scripts": {
     "setup": "npm i",
     "format": "prettier --write **/*.{js,jsx,ts,tsx,css,html}",
     "format-test": "prettier --check **/*.{js,jsx,ts,tsx,css,html}",
-    "lint": "eslint **/*.{js,jsx,ts,tsx} --fix",
-    "lint-test": "eslint **/*.{js,jsx,ts,tsx} --color"
+    "lint": "eslint . --fix --ignore-pattern 'scripts/jquery-3.3.1.min.js' --ignore-pattern 'scripts/semantic-2.4.1.min.js'",
+    "lint-test": "eslint . --color --ignore-pattern 'scripts/jquery-3.3.1.min.js' --ignore-pattern 'scripts/semantic-2.4.1.min.js'"
   },
   "devDependencies": {
-    "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-prettier": "^5.0.1",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "prettier": "^3.1.0"
+    "@eslint/js": "^9.23.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.5",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "prettier": "^3.5.3"
   }
 }
