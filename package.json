@@ -8,8 +8,8 @@
     "setup": "npm i",
     "format": "prettier --write **/*.{js,jsx,ts,tsx,css,html}",
     "format-test": "prettier --check **/*.{js,jsx,ts,tsx,css,html}",
-    "lint": "eslint . --fix --ignore-pattern 'src/js/jquery-3.3.1.min.js' --ignore-pattern 'src/js/semantic-2.4.1.min.js'",
-    "lint-test": "eslint . --color --ignore-pattern 'src/js/jquery-3.3.1.min.js' --ignore-pattern 'src/js/semantic-2.4.1.min.js'"
+    "lint": "eslint . --fix --ignore-pattern 'src/js/static/jquery-3.3.1.min.js' --ignore-pattern 'src/js/static/semantic-2.4.1.min.js'",
+    "lint-test": "eslint . --color --ignore-pattern 'src/js/static/jquery-3.3.1.min.js' --ignore-pattern 'src/js/static/semantic-2.4.1.min.js'"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
