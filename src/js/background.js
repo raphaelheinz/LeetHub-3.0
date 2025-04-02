@@ -1,34 +1,35 @@
-function handleMessage(request) {
+const displayWelcomePage = () => {
+  const url = chrome.runtime.getURL('src/html/welcome.html');
+  chrome.tabs.create({ url: url, active: true });
+}
+
+const closeTab = () => {
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
+    chrome.tabs.remove(tabs[0].id);
+  });
+}
+
+const handleMessage = (request) => {
+  if (!request) {
+    console.log('Received undefined message');
+    return;
+  }
+
   if (request.action === 'customCommitMessageUpdated') {
     chrome.storage.local.set({ custom_commit_message: request.message });
   }
 
-  if (request && request.closeWebPage === true && request.isSuccess === true) {
-    /* Set username */
-    chrome.storage.local.set({ leethub_username: request.username });
-
-    /* Set token */
-    chrome.storage.local.set({ leethub_token: request.token });
-
-    /* Close pipe */
-    chrome.storage.local.set({ pipe_leethub: false }, () => {
-      console.log('Closed pipe.');
-    });
-
-    chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
-      var tab = tabs[0];
-      chrome.tabs.remove(tab.id);
-    });
-
-    /* Go to onboarding for UX */
-    const urlOnboarding = chrome.runtime.getURL('src/html/welcome.html');
-    chrome.tabs.create({ url: urlOnboarding, active: true }); // creates new tab
-  } else if (request && request.closeWebPage === true && request.isSuccess === false) {
-    alert('Something went wrong while trying to authenticate your profile!');
-    chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
-      var tab = tabs[0];
-      chrome.tabs.remove(tab.id);
-    });
+  if (request.closeWebPage) {
+    if (request.isSuccess) {
+      chrome.storage.local.set({ leethub_username: request.username });
+      chrome.storage.local.set({ leethub_token: request.token });
+      chrome.storage.local.set({ pipe_leethub: false }, () => {});
+      closeTab();
+      displayWelcomePage();
+    } else {
+      alert('Error while trying to authenticate your profile!');
+      closeTab();
+    }
   }
 }
 
