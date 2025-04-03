@@ -38,12 +38,28 @@ $('#collapsible-difficulty-icon').click(() => {
   chrome.storage.local.get({ useDifficultyFolder: false }, data => {
     $('#use-difficulty-folder').prop('checked', data.useDifficultyFolder);
   });
+
+});// Toggle timestamped filenames section
+$('#toggle-timestamp-icon').click(() => {
+  $('#toggle-timestamp-icon').toggleClass('open');
+  $('#timestamp-folder-container').toggle();
+
+// Save toggle state when checkbox changes
+$('#use-timestamp-filename').change(function () {
+  const isChecked = $(this).is(':checked');
+  chrome.storage.local.set({ useTimestampFilename: isChecked });
 });
 
 // Store Switch State
 $('#use-difficulty-folder').change(function () {
   const isChecked = $(this).is(':checked');
   chrome.storage.local.set({ useDifficultyFolder: isChecked });
+});
+
+  // Load stored toggle state
+  chrome.storage.local.get({ useTimestampFilename: false }, data => {
+    $('#use-timestamp-filename').prop('checked', data.useTimestampFilename);
+  });
 });
 
 $('#msg-save-btn').click(() => {
