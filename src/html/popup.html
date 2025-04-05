@@ -1,25 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
-    <link rel="stylesheet" href="css/popup.css" />
-    <script
-      src="scripts/jquery-3.3.1.min.js"
-    ></script>
-
+    <link rel="stylesheet" href="../css/popup.css" />
+    <script src="../js/static/jquery-3.3.1.min.js"></script>
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"
       rel="stylesheet"
     />
-    <script src="scripts/semantic-2.4.1.min.js"></script>
+    <script src="../js/static/semantic-2.4.1.min.js"></script>
   </head>
 
   <body>
     <div class="ui grid container">
       <div class="sixteen wide center aligned column">
-        <h1 id="title">
-          Leet<span style="color: #ff6c0a">Hub</span> v3
-        </h1>
+        <h1 id="title">Leet<span style="color: #ff6c0a">Hub</span>-3.0</h1>
         <p id="caption">Sync your code from LeetCode to GitHub</p>
         <br />
         <!-- Authentication mode -->
@@ -27,9 +22,7 @@
           <p class="onboarding">
             <br />
             Authenticate with GitHub to use
-            <strong
-              >Leet<span style="color: #ff6c0a">Hub</span></strong
-            >
+            <strong>Leet<span style="color: #ff6c0a">Hub</span></strong>
           </p>
           <button id="authenticate" class="ui secondary button">
             <i class="icon github"></i>
@@ -42,16 +35,9 @@
           <p class="onboarding">
             <br />
             Set up repository hook to use
-            <strong
-              >Leet<span style="color: #ff6c0a">Hub</span></strong
-            >
+            <strong>Leet<span style="color: #ff6c0a">Hub</span></strong>
           </p>
-          <a
-            id="hook_URL"
-            href=""
-            target="blank"
-            class="ui secondary button"
-          >
+          <a id="hook_URL" href="" target="blank" class="ui secondary button">
             <i class="icon github"></i>
             Set up Hook
           </a>
@@ -60,34 +46,20 @@
         <!-- Commit mode -->
         <div id="commit_mode" hidden>
           <p id="repo_url" class="ui small header"></p>
-          <p class="onboarding">
-            Problems Solved: <span id="p_solved">0</span>
-          </p>
+          <p class="onboarding">Problems Solved: <span id="p_solved">0</span></p>
           <p class="ui small header">
             <span style="color: #5cb85c">Easy:</span>
-            <span
-              id="p_solved_easy"
-              style="color: #000000; opacity: 0.75"
-              >0
-            </span>
+            <span id="p_solved_easy" style="color: #000000; opacity: 0.75">0 </span>
             <span style="color: #f0ad4e">&ensp; &ensp; Medium:</span>
-            <span
-              id="p_solved_medium"
-              style="color: #000000; opacity: 0.75"
-              >0
-            </span>
+            <span id="p_solved_medium" style="color: #000000; opacity: 0.75">0 </span>
             <span style="color: #d9534f">&ensp; &ensp; Hard:</span>
-            <span
-              id="p_solved_hard"
-              style="color: #000000; opacity: 0.75"
-              >0
-            </span>
+            <span id="p_solved_hard" style="color: #000000; opacity: 0.75">0 </span>
           </p>
 
           <!-- Toggle custom commit menu -->
           <span id="toggle-icon">&#9654;</span> Customize Commit Message
-          
-          <div id="customize-message-container" style="display: none;">
+
+          <div id="customize-message-container" style="display: none">
             <label for="variables">Available Variables</label>
             <div id="variales">
               <button class="commit-variable" id="time">Time (Time Percentile)</button>
@@ -97,7 +69,11 @@
               <button class="commit-variable" id="difficulty">Difficulty</button>
               <button class="commit-variable" id="language">Solved Language</button>
             </div>
-            <textarea rows="4" id="custom-commit-msg" placeholder="Time: {time}, Space: {space} - LeetHub"></textarea>
+            <textarea
+              rows="4"
+              id="custom-commit-msg"
+              placeholder="Time: {time}, Space: {space} - LeetHub"
+            ></textarea>
             <div id="setting-btns">
               <button class="setting-btns" id="msg-reset-btn">Reset</button>
               <button class="setting-btns" id="msg-save-btn">Save</button>
@@ -110,7 +86,10 @@
             <span id="toggle-folder-icon">&#9654;</span> Use Difficulty Subfolder
 
             <div id="difficulty-folder-container" style="display: none">
-              <p>Organize files into folders like <code>LeetCode/Easy/0001-two-sum/0001-two-sum.js</code></p>
+              <p>
+                Organize files into folders like
+                <code>LeetCode/Easy/0001-two-sum/0001-two-sum.js</code>
+              </p>
               <div class="centered-toggle">
                 <div class="ui toggle checkbox">
                   <input type="checkbox" id="use-difficulty-folder" />
@@ -122,15 +101,18 @@
           <!-- Toggle useTimestampFilename setting -->
           <div>
             <span id="toggle-timestamp-icon">&#9654;</span> Enable Timestamped Filenames
- 
+
             <div id="timestamp-folder-container" style="display: none">
-              <p>Save submissions like <code>0001-two-sum_03-30-2025_12-30-15.js</code> to preserve versions.</p>
+              <p>
+                Save submissions like <code>0001-two-sum_03-30-2025_12-30-15.js</code> to preserve
+                versions.
+              </p>
               <div class="centered-toggle">
-                    <input type="checkbox" id="use-timestamp-filename" />
-                    <label for="use-timestamp-filename">Add versioned filenames (timestamped)</label>
+                <input type="checkbox" id="use-timestamp-filename" />
+                <label for="use-timestamp-filename">Add versioned filenames (timestamped)</label>
               </div>
-             </div>
-           </div>
+            </div>
+          </div>
 
           <div class="ui small header">
             Want more features?
@@ -146,24 +128,17 @@
 
       <!-- Generate Socials -->
       <div id="socials" class="sixteen wide column">
-        <a href="https://github.com/raphaelheinz/LeetHub-3.0" target="_blank"
-          ><i class="ui black github icon"></i
-        ></a>
-        <!-- <a
-          href="https://www.linkedin.com/in/X/"
-          target="_blank"
-          ><i class="ui linkedin icon"></i
-        ></a> -->
-        <a href="mailto:raphael.heinz.hof.university@gmail.com" target="_blank"
-          ><i class="ui red envelope icon"></i
-        ></a>
-        <a id="welcome_URL" href="" target="_blank"
-          ><i class="ui grey globe icon"></i
-        ></a>
+        <a href="https://github.com/raphaelheinz/LeetHub-3.0" target="_blank">
+          <i class="ui black github icon"></i>
+        </a>
+        <a href="mailto:raphael.heinz.hof.university@gmail.com" target="_blank">
+          <i class="ui red envelope icon"></i>
+        </a>
+        <a id="welcome_URL" href="" target="_blank"><i class="ui grey globe icon"></i></a>
       </div>
     </div>
 
-    <script src="scripts/oauth2.js"></script>
-    <script type="text/javascript" src="popup.js"></script>
+    <script src="../js/oauth2.js"></script>
+    <script type="text/javascript" src="../js/popup.js"></script>
   </body>
 </html>
