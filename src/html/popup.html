@@ -57,9 +57,14 @@
           </p>
 
           <!-- Toggle custom commit menu -->
-          <span id="toggle-icon">&#9654;</span> Customize Commit Message
+          <span id="collapsible-commit-message-icon" class="collapsible-icon">&#9654;</span>
+          Customize Commit Message
 
-          <div id="customize-message-container" style="display: none">
+          <div
+            id="collapsible-commit-message-container"
+            class="collapsible-container"
+            style="display: none"
+          >
             <label for="variables">Available Variables</label>
             <div id="variales">
               <button class="commit-variable" id="time">Time (Time Percentile)</button>
@@ -81,11 +86,16 @@
               <span id="success-message">Commit message saved!</span>
             </div>
           </div>
+
           <!-- Toggle useDifficultyFolder setting -->
           <div>
-            <span id="toggle-folder-icon">&#9654;</span> Use Difficulty Subfolder
-
-            <div id="difficulty-folder-container" style="display: none">
+            <span id="collapsible-difficulty-icon" class="collapsible-icon">&#9654;</span> Use
+            Difficulty Subfolder
+            <div
+              id="collapsible-difficulty-container"
+              class="collapsible-container"
+              style="display: none"
+            >
               <p>
                 Organize files into folders like
                 <code>LeetCode/Easy/0001-two-sum/0001-two-sum.js</code>

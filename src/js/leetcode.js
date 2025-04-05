@@ -82,8 +82,7 @@ function constructGitHubPath(hook, basePath, difficulty, problem, filename, useD
 
 const parseCustomCommitMessage = (text, problemContext) => {
   return text.replace(/{(\w+)}/g, (match, key) => {
-    // check if the variable exists in the problemContext and replace the matching text
-    return problemContext.hasOwnProperty(key) ? problemContext[key] : match;
+    return Object.prototype.hasOwnProperty.call(problemContext, key) ? problemContext[key] : match;
   });
 };
 

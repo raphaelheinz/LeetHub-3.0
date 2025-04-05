@@ -31,7 +31,7 @@ body {
   font-size: medium;
 }
 
-#toggle-icon {
+.collapsible-icon {
   font-size: 10px;
   width: 20px;
   height: 20px;
@@ -39,23 +39,6 @@ body {
   transition: transform 0.3s ease;
   display: inline-block;
   cursor: pointer;
-}
-
-#toggle-folder-icon {
-  font-size: 10px;
-  width: 20px;
-  height: 20px;
-  background-color: transparent;
-  transition: transform 0.3s ease;
-  display: inline-block;
-  cursor: pointer;
-}
-#toggle-folder-icon:hover {
-  background-color: #cfc9c980 !important;
-}
-
-#toggle-folder-icon.open {
-  transform: rotate(90deg);
 }
 
 #toggle-timestamp-icon {
@@ -75,12 +58,21 @@ body {
 #toggle-timestamp-icon.open {
   transform: rotate(90deg);
 }
-#toggle-icon:hover {
+
+.collapsible-icon:hover {
   background-color: #cfc9c980 !important;
 }
 
-#toggle-icon.open {
+.collapsible-icon.open {
   transform: rotate(90deg);
+}
+
+.collapsible-container {
+  border: 1px dotted black;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
 }
 
 #customize-btn {
@@ -89,21 +81,6 @@ body {
   background-color: transparent;
 }
 
-#customize-message-container {
-  border: 1px dotted black;
-  padding: 1em;
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-}
-
-#difficulty-folder-container {
-  border: 1px dotted black;
-  padding: 1em;
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-}
 #timestamp-folder-container {
   margin-top: 1em;
   border: 1px dotted black;
