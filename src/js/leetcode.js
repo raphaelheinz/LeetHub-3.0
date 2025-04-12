@@ -48,17 +48,25 @@ function getTodaysDate() {
   const month = today.getMonth() + 1; // fix months are zero-indexed
   const day = today.getDate();
   const year = today.getFullYear();
+
+  const formattedMonth = month < 10 ? '0' + month : month;
+  const formattedDay = day < 10 ? '0' + day : day;
+
+  return `${formattedMonth}-${formattedDay}-${year}`;
+}
+
+/* returns time in hh-mm-ss format */
+function getTime() {
+  const today = new Date();
   const hours = today.getHours();
   const minutes = today.getMinutes();
   const seconds = today.getSeconds();
 
-  const formattedMonth = month < 10 ? '0' + month : month;
-  const formattedDay = day < 10 ? '0' + day : day;
   const formattedHours = hours < 10 ? '0' + hours : hours;
   const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
   const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
 
-  return `${formattedMonth}-${formattedDay}-${year}_${formattedHours}-${formattedMinutes}-${formattedSeconds}`;
+  return `${formattedHours}-${formattedMinutes}-${formattedSeconds}`;
 }
 
 /**
@@ -158,7 +166,7 @@ const upload = (
       updatedSha = body.content.sha; // get updated SHA.
       const { useTimestampFilename = false } =
         await chrome.storage.local.get('useTimestampFilename');
-      stats = await getAndInitializeStats(problem);
+      const stats = await getAndInitializeStats(problem);
       const shaKey = useTimestampFilename ? filename : problem;
       stats.shas[problem][shaKey] = updatedSha;
       return chrome.storage.local.set({ stats });
@@ -217,16 +225,15 @@ const update = (
   token,
   hook,
   addition,
-  directory,
+  problem,
   filename,
   commitMsg,
   shouldPreprendDiscussionPosts,
   cb = undefined,
   useDifficultyFolder,
-  useTimestampFilename = false,
 ) => {
   let responseSHA;
-  return getUpdatedData(token, hook, directory, filename)
+  return getUpdatedData(token, hook, problem, filename, useDifficultyFolder)
     .then(data => {
       responseSHA = data.sha;
       return decodeURIComponent(escape(atob(data.content)));
@@ -253,7 +260,6 @@ const update = (
         commitMsg,
         cb,
         useDifficultyFolder,
-        useTimestampFilename,
       ),
     );
 };
@@ -275,7 +281,8 @@ function uploadGit(
 
   let token;
   let hook;
-  let useDifficultyFolder = true;
+  let useDifficultyFolder = false;
+  let useTimestampFilename = false;
 
   return chrome.storage.local
     .get('leethub_token')
@@ -323,7 +330,6 @@ function uploadGit(
           commitMsg,
           cb,
           useDifficultyFolder,
-          useTimestampFilename,
         );
       } else if (action === 'update') {
         return update(
@@ -336,7 +342,6 @@ function uploadGit(
           shouldPrependDiscussionPosts,
           cb,
           useDifficultyFolder,
-          useTimestampFilename,
         );
       }
     })
@@ -348,7 +353,6 @@ function uploadGit(
           problemName,
           fileName,
           useDifficultyFolder,
-          useTimestampFilename,
         );
       } else {
         throw err;
@@ -366,7 +370,6 @@ function uploadGit(
             commitMsg,
             cb,
             useDifficultyFolder,
-            useTimestampFilename,
           )
         : undefined,
     );
@@ -381,7 +384,6 @@ async function getUpdatedData(token, hook, problem, filename, useDifficultyFolde
     problem,
     filename,
     useDifficultyFolder,
-    useTimestampFilename,
   );
 
   let options = {
@@ -1216,18 +1218,6 @@ const loader = (leetCode, suffix) => {
       if (!language) {
         throw new Error('Could not find language');
       }
-      const { useTimestampFilename = false } =
-        await chrome.storage.local.get('useTimestampFilename');
-
-      let fileName;
-      if (useTimestampFilename) {
-        const timestamp = getTodaysDate().replace(/[:\s]/g, '--');
-        fileName = suffix
-          ? `${problemName}${suffix}-${timestamp}${language}`
-          : `${problemName}-${timestamp}${language}`;
-      } else {
-        fileName = suffix ? `${problemName}${suffix}${language}` : `${problemName}${language}`;
-      }
 
       /* Upload README */
       const updateReadMe = await chrome.storage.local.get('stats').then(({ stats }) => {
@@ -1270,13 +1260,26 @@ const loader = (leetCode, suffix) => {
       const probStatsCommitMsg = `Time: ${probStats.time} (${probStats.timePercentile}%), Space: ${probStats.space} (${probStats.spacePercentile}%) - LeetHub`; // default commit
       const commitMsg = (await getCustomCommitMessage(problemContext)) || probStatsCommitMsg;
 
-      /* Upload code to Git */
-      const timestamp = getTodaysDate().replace(/[:\s]/g, '-'); // Clean timestamp
-      uniqueFilename = suffix
+      const { useTimestampFilename = false } =
+      await chrome.storage.local.get('useTimestampFilename');
+
+      let fileName;
+      if (useTimestampFilename) {
+        const timestamp = `${getTodaysDate()}-${getTime()}`.replace(/[:\s]/g, '--');
+        fileName = suffix
         ? `${problemName}${suffix}-${timestamp}${language}`
         : `${problemName}-${timestamp}${language}`;
+      } else {
+        fileName = suffix ? `${problemName}${suffix}${language}` : `${problemName}${language}`;
+      }
 
-      const updateCode = leetCode.findAndUploadCode(problemName, fileName, commitMsg, 'upload');
+      /* Upload code to Git */
+      const updateCode = leetCode.findAndUploadCode(
+        problemName,
+        fileName,
+        commitMsg,
+        'upload',
+      );
 
       await Promise.all([updateReadMe, updateNotes, updateCode]);
 
