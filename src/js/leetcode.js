@@ -164,11 +164,8 @@ const upload = (
     })
     .then(async body => {
       updatedSha = body.content.sha; // get updated SHA.
-      const { useTimestampFilename = false } =
-        await chrome.storage.local.get('useTimestampFilename');
       const stats = await getAndInitializeStats(problem);
-      const shaKey = useTimestampFilename ? filename : problem;
-      stats.shas[problem][shaKey] = updatedSha;
+      stats.shas[problem][filename] = updatedSha;
       return chrome.storage.local.set({ stats });
     })
     .then(() => {
@@ -209,12 +206,9 @@ const incrementStats = () => {
   });
 };
 
-const checkAlreadyCompleted = async (problemName, filename) => {
-  const { useTimestampFilename = false } = await chrome.storage.local.get('useTimestampFilename');
+const checkAlreadyCompleted = async problemName => {
   const { stats } = await chrome.storage.local.get('stats');
-
-  const shaKey = useTimestampFilename ? filename : problemName;
-  return stats?.shas?.[problemName]?.[shaKey] != null;
+  return stats?.shas?.[problemName] ?? false;
 };
 
 /* Main function for updating code on GitHub Repo */
@@ -282,7 +276,6 @@ function uploadGit(
   let token;
   let hook;
   let useDifficultyFolder = false;
-  let useTimestampFilename = false;
 
   return chrome.storage.local
     .get('leethub_token')
@@ -308,17 +301,12 @@ function uploadGit(
     })
     .then(result => {
       useDifficultyFolder = result.useDifficultyFolder || false;
-      return chrome.storage.local.get('useTimestampFilename');
-    })
-    .then(result => {
-      useTimestampFilename = result.useTimestampFilename || false;
       return chrome.storage.local.get('stats');
     })
     .then(({ stats }) => {
       if (action === 'upload') {
         /* Get SHA, if it exists */
-        const shaKey = useTimestampFilename ? fileName : problemName;
-        const sha = stats?.shas?.[problemName]?.[shaKey] ?? '';
+        const sha = stats?.shas?.[problemName]?.[fileName] ?? '';
 
         return upload(
           token,
@@ -347,13 +335,7 @@ function uploadGit(
     })
     .catch(err => {
       if (err.message === '409') {
-        return getUpdatedData(
-          token,
-          hook,
-          problemName,
-          fileName,
-          useDifficultyFolder,
-        );
+        return getUpdatedData(token, hook, problemName, fileName, useDifficultyFolder);
       } else {
         throw err;
       }
@@ -1261,25 +1243,20 @@ const loader = (leetCode, suffix) => {
       const commitMsg = (await getCustomCommitMessage(problemContext)) || probStatsCommitMsg;
 
       const { useTimestampFilename = false } =
-      await chrome.storage.local.get('useTimestampFilename');
+        await chrome.storage.local.get('useTimestampFilename');
 
       let fileName;
       if (useTimestampFilename) {
         const timestamp = `${getTodaysDate()}-${getTime()}`.replace(/[:\s]/g, '--');
         fileName = suffix
-        ? `${problemName}${suffix}-${timestamp}${language}`
-        : `${problemName}-${timestamp}${language}`;
+          ? `${problemName}${suffix}-${timestamp}${language}`
+          : `${problemName}-${timestamp}${language}`;
       } else {
         fileName = suffix ? `${problemName}${suffix}${language}` : `${problemName}${language}`;
       }
 
       /* Upload code to Git */
-      const updateCode = leetCode.findAndUploadCode(
-        problemName,
-        fileName,
-        commitMsg,
-        'upload',
-      );
+      const updateCode = leetCode.findAndUploadCode(problemName, fileName, commitMsg, 'upload');
 
       await Promise.all([updateReadMe, updateNotes, updateCode]);
 

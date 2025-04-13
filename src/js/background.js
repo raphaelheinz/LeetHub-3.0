@@ -1,15 +1,15 @@
 const displayWelcomePage = () => {
   const url = chrome.runtime.getURL('src/html/welcome.html');
   chrome.tabs.create({ url: url, active: true });
-}
+};
 
 const closeTab = () => {
   chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
     chrome.tabs.remove(tabs[0].id);
   });
-}
+};
 
-const handleMessage = (request) => {
+const handleMessage = request => {
   if (!request) {
     console.log('Received undefined message');
     return;
@@ -31,6 +31,6 @@ const handleMessage = (request) => {
       closeTab();
     }
   }
-}
+};
 
 chrome.runtime.onMessage.addListener(handleMessage);
