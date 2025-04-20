@@ -854,7 +854,7 @@ LeetCodeV2.prototype.init = async function () {
     variables: { submissionId: submissionId },
     operationName: 'submissionDetails',
   };
-  const options = {
+  const submissionDetailsOptions = {
     method: 'POST',
     headers: {
       cookie: document.cookie, // required to authorize the API request
@@ -862,11 +862,30 @@ LeetCodeV2.prototype.init = async function () {
     },
     body: JSON.stringify(submissionDetailsQuery),
   };
-  const data = await fetch('https://leetcode.com/graphql/', options)
+  const submissionDetailsData = await fetch('https://leetcode.com/graphql/', submissionDetailsOptions)
     .then(res => res.json())
     .then(res => res.data.submissionDetails);
 
-  this.submissionData = data;
+  this.submissionData = submissionDetailsData;
+
+  const questionDetailsQuery = {
+    query:
+      '\n    query questionDetail($titleSlug: String!) {\n  question(titleSlug: $titleSlug) {\n    title\n    titleSlug\n    questionId\n    questionFrontendId\n    questionTitle\n    translatedTitle\n    content\n    translatedContent\n    categoryTitle\n    difficulty\n    stats\n    topicTags {\n      name\n      slug\n      translatedName\n    }\n  }\n}\n',
+    variables: { titleSlug: this.submissionData.question.titleSlug },
+    operationName: 'questionDetail',
+  };
+  const questionDetailsOptions = {
+    method: 'POST',
+    headers: {
+      cookie: document.cookie,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(questionDetailsQuery),
+  };
+  const questionDetailsData = await fetch('https://leetcode.com/graphql/', questionDetailsOptions)
+    .then(res => res.json())
+    .then(res => res.data.question);
+  this.questionDetails = questionDetailsData;
 };
 LeetCodeV2.prototype.findAndUploadCode = function (
   problemName,
@@ -956,6 +975,7 @@ LeetCodeV2.prototype.parseStats = function () {
       timePercentile: runtimePercentile,
       space: this.submissionData.memoryDisplay,
       spacePercentile: spacePercentile,
+      problemTopic: this.questionDetails?.topicTags?.[0]?.name ?? 'UNKNOWN'
     };
   }
 
@@ -1238,6 +1258,7 @@ const loader = (leetCode, suffix) => {
         problemName: problemName,
         difficulty: difficulty,
         date: getTodaysDate(),
+        problemTopic: probStats.problemTopic,
       };
       const probStatsCommitMsg = `Time: ${probStats.time} (${probStats.timePercentile}%), Space: ${probStats.space} (${probStats.spacePercentile}%) - LeetHub`; // default commit
       const commitMsg = (await getCustomCommitMessage(problemContext)) || probStatsCommitMsg;
