@@ -886,6 +886,25 @@ LeetCodeV2.prototype.init = async function () {
     .then(res => res.json())
     .then(res => res.data.question);
   this.questionDetails = questionDetailsData;
+
+  const questionNoteQuery = {
+    query:
+      '\n    query questionNote($titleSlug: String!) {\n  question(titleSlug: $titleSlug) {\n    questionId\n    note\n  }\n}\n',
+    variables: { titleSlug: this.submissionData.question.titleSlug },
+    operationName: 'questionNote',
+  };
+  const questionNoteOptions = {
+    method: 'POST',
+    headers: {
+      cookie: document.cookie,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(questionNoteQuery),
+  };
+  const questionNoteData = await fetch('https://leetcode.com/graphql/', questionNoteOptions)
+    .then(res => res.json())
+    .then(res => res.data.question);
+  this.questionNote = questionNoteData;
 };
 LeetCodeV2.prototype.findAndUploadCode = function (
   problemName,
@@ -939,7 +958,10 @@ LeetCodeV2.prototype.getLanguageExtension = function () {
   return languages[lang];
 };
 
-LeetCodeV2.prototype.getNotesIfAny = function () {};
+LeetCodeV2.prototype.getNotesIfAny = function () {
+  //console.log("###", this.questionNote.note)
+  //return this.questionNote.note;
+};
 
 LeetCodeV2.prototype.extractQuestionNumber = function () {
   return this.submissionData.question.questionFrontendId;
