@@ -1473,12 +1473,27 @@ setTimeout(() => {
   leetCode.addUrlChangeListener();
 }, 6000);
 
+/**
+ * @param {string} topic - Topic to which the problem will be added.
+ * @param {string} markdownFile - The markdown file content.
+ * @param {string} hook - github hook (username/repo).
+ * @param {string} problem - Problem name.
+ *
+ * @returns {string} - The updated markdown file content.
+ */
 function appendProblemToReadme(topic, markdownFile, hook, problem) {
-  const url = `https://github.com/${hook}/tree/master/${problem}`;
+
+  const useDifficultyFolder = chrome.storage.local.get('useDifficultyFolder') || false;
+
+  let path = `${basePath}/`;
+  path += useDifficultyFolder ? `${difficulty}/` : '';
+  path += `${problem}`;
+
+  const url = `https://github.com/${hook}/tree/main/${path}`;
 
   const topicHeader = `## ${topic}`;
-  const topicTableHeader = `\n${topicHeader}\n|  |\n| ------- |\n`;
-  const newRow = `| [${problem}](${url}) |`;
+  const topicTableHeader = `\n${topicHeader}\n| Problem Name | Difficulty |\n| ------- | ------- |\n`;
+  const newRow = `| [${problem}](${url}) | ${difficulty} |\n`;
 
   // Check if the LeetCode Section exists, or add it
   let leetCodeSectionStartIndex = markdownFile.indexOf(leetCodeSectionStart);
@@ -1603,7 +1618,7 @@ function sortTopicsInReadme(markdownFile) {
     });
 
     // Reconstruct the topic
-    return ['## ' + topic].concat('|  |', '| ------- |', lines).join('\n');
+    return ['## ' + topic].concat('| Problem Name | Difficulty |', '| ------- | ------- |', lines).join('\n');
   });
 
   // Reconstruct the file
