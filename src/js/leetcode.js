@@ -840,31 +840,74 @@ function LeetCodeV2() {
 }
 LeetCodeV2.prototype.init = async function () {
   const problem = document.URL.match(/leetcode.com\/problems\/([^/]*)\//);
-  const val = await chrome.storage.local.get(problem[1]);
-  if (!val) {
-    alert('Have you submitted this problem yet?');
+  if (!problem || !problem[1]) {
+    console.error('Could not extract problem name from URL:', document.URL);
     return false;
   }
+  
+  let val = await chrome.storage.local.get(problem[1]);
+  if (!val || !val[problem[1]]) {
+    console.log('No submission ID found for problem:', problem[1]);
+    
+    // Try to detect submission ID from current URL if we're on a submission page
+    const currentUrl = window.location.href;
+    const submissionMatch = currentUrl.match(/\/(\d+)(\/|\?|$)/);
+    if (submissionMatch && submissionMatch[1]) {
+      console.log('Found submission ID in current URL:', submissionMatch[1]);
+      chrome.storage.local.set({ [problem[1]]: submissionMatch[1] });
+      val = { [problem[1]]: submissionMatch[1] };
+    } else {
+      alert('Have you submitted this problem yet? Please visit the submission page first.');
+      return false;
+    }
+  }
+  
   const submissionId = val[problem[1]];
+  console.log('Found submission ID:', submissionId, 'for problem:', problem[1]);
 
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const submissionDetailsQuery = {
     query:
       '\n    query submissionDetails($submissionId: Int!) {\n  submissionDetails(submissionId: $submissionId) {\n    runtime\n    runtimeDisplay\n    runtimePercentile\n    runtimeDistribution\n    memory\n    memoryDisplay\n    memoryPercentile\n    memoryDistribution\n    code\n    timestamp\n    statusCode\n    lang {\n      name\n      verboseName\n    }\n    question {\n      questionId\n    questionFrontendId\n    title\n    titleSlug\n    content\n    difficulty\n    }\n    notes\n    topicTags {\n      tagId\n      slug\n      name\n    }\n    runtimeError\n  }\n}\n    ',
-    variables: { submissionId: submissionId },
+    variables: { submissionId: parseInt(submissionId) }, // Ensure it's an integer
     operationName: 'submissionDetails',
   };
+  console.log('Submission details query:', submissionDetailsQuery);
   const submissionDetailsOptions = {
     method: 'POST',
     headers: {
-      cookie: document.cookie, // required to authorize the API request
-      'content-type': 'application/json',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
     },
+    credentials: 'include', // This handles cookies automatically
     body: JSON.stringify(submissionDetailsQuery),
   };
   const submissionDetailsData = await fetch('https://leetcode.com/graphql/', submissionDetailsOptions)
-    .then(res => res.json())
-    .then(res => res.data.submissionDetails);
+    .then(res => {
+      if (!res.ok) {
+        console.error('LeetCode API request failed with status:', res.status);
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      return res.json();
+    })
+    .then(res => {
+      console.log('LeetCode API response:', res);
+      if (!res || !res.data) {
+        console.error('Invalid response format from LeetCode API:', res);
+        throw new Error('Invalid response format: missing data property');
+      }
+      if (!res.data.submissionDetails) {
+        console.error('Missing submissionDetails in response:', res.data);
+        throw new Error('Invalid response format: missing submissionDetails');
+      }
+      return res.data.submissionDetails;
+    })
+    .catch(error => {
+      console.error('Error fetching submission details:', error);
+      // Just log the error, don't try to display it in UI since this.loader doesn't exist
+      throw error;
+    });
 
   this.submissionData = submissionDetailsData;
 
@@ -877,14 +920,37 @@ LeetCodeV2.prototype.init = async function () {
   const questionDetailsOptions = {
     method: 'POST',
     headers: {
-      cookie: document.cookie,
-      'content-type': 'application/json',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
     },
+    credentials: 'include',
     body: JSON.stringify(questionDetailsQuery),
   };
   const questionDetailsData = await fetch('https://leetcode.com/graphql/', questionDetailsOptions)
-    .then(res => res.json())
-    .then(res => res.data.question);
+    .then(res => {
+      if (!res.ok) {
+        console.error('Question details API request failed with status:', res.status);
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      return res.json();
+    })
+    .then(res => {
+      console.log('Question details API response:', res);
+      if (!res || !res.data) {
+        console.error('Invalid response format from question details API:', res);
+        throw new Error('Invalid response format: missing data property');
+      }
+      if (!res.data.question) {
+        console.error('Missing question in response:', res.data);
+        throw new Error('Invalid response format: missing question');
+      }
+      return res.data.question;
+    })
+    .catch(error => {
+      console.error('Error fetching question details:', error);
+      throw error;
+    });
   this.questionDetails = questionDetailsData;
 };
 LeetCodeV2.prototype.findAndUploadCode = function (
@@ -979,19 +1045,32 @@ LeetCodeV2.prototype.parseStats = function () {
     };
   }
 
-  // Doesn't work unless we wait for page to finish loading.
-  setTimeout(() => {}, 1000);
-  const probStats = document.getElementsByClassName('flex w-full pb-4')[0].innerText.split('\n');
-  if (!checkElem(probStats)) {
+  // Fallback to DOM parsing with error handling
+  try {
+    // Doesn't work unless we wait for page to finish loading.
+    setTimeout(() => {}, 1000);
+    const statsElements = document.getElementsByClassName('flex w-full pb-4');
+    if (!statsElements || statsElements.length === 0) {
+      console.log('Stats elements not found, returning null');
+      return null;
+    }
+    
+    const probStats = statsElements[0].innerText.split('\n');
+    if (!checkElem(probStats) || probStats.length < 8) {
+      console.log('Insufficient stats data, returning null');
+      return null;
+    }
+
+    const time = probStats[1];
+    const timePercentile = probStats[3];
+    const space = probStats[5];
+    const spacePercentile = probStats[7];
+
+    return formatStats(time, timePercentile, space, spacePercentile);
+  } catch (error) {
+    console.error('Error parsing stats from DOM:', error);
     return null;
   }
-
-  const time = probStats[1];
-  const timePercentile = probStats[3];
-  const space = probStats[5];
-  const spacePercentile = probStats[7];
-
-  return formatStats(time, timePercentile, space, spacePercentile);
 };
 LeetCodeV2.prototype.parseQuestion = function () {
   let markdown;
@@ -1148,13 +1227,51 @@ function isValidSuffix(string) {
 }
 
 LeetCodeV2.prototype.addUrlChangeListener = function () {
-  window.navigation.addEventListener('navigate', _ => {
-    const problem = window.location.href.match(/leetcode.com\/problems\/(.*)\/submissions/);
-    const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
-    if (problem && problem.length > 1 && submissionId && submissionId.length > 1) {
-      chrome.storage.local.set({ [problem[1]]: submissionId[1] });
-    }
-  });
+  // Modern browsers (Chrome, newer Firefox)
+  if (window.navigation && window.navigation.addEventListener) {
+    window.navigation.addEventListener('navigate', _ => {
+      this.captureSubmissionId();
+    });
+  } else {
+    // Fallback for older browsers or Firefox
+    // Use MutationObserver to detect URL changes
+    let currentUrl = window.location.href;
+    const observer = new MutationObserver(() => {
+      if (window.location.href !== currentUrl) {
+        currentUrl = window.location.href;
+        this.captureSubmissionId();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Also listen for popstate (back/forward navigation)
+    window.addEventListener('popstate', () => {
+      this.captureSubmissionId();
+    });
+  }
+  
+  // Always capture on page load
+  this.captureSubmissionId();
+};
+
+LeetCodeV2.prototype.captureSubmissionId = function () {
+  const currentUrl = window.location.href;
+  console.log('Checking URL for submission ID:', currentUrl);
+  
+  // Check if we're on a submission page
+  const problem = currentUrl.match(/leetcode.com\/problems\/([^/]+)\/submissions/);
+  const submissionId = currentUrl.match(/\/(\d+)(\/|\?|$)/);
+  
+  if (problem && problem.length > 1 && submissionId && submissionId.length > 1) {
+    const problemSlug = problem[1];
+    const subId = submissionId[1];
+    console.log('Capturing submission ID:', subId, 'for problem:', problemSlug);
+    chrome.storage.local.set({ [problemSlug]: subId }, () => {
+      console.log('Submission ID stored successfully');
+    });
+  } else {
+    console.log('Not on a submission page, URL patterns not matched');
+  }
 };
 
 /* Sync to local storage */
