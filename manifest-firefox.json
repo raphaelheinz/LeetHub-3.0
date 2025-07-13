@@ -1,11 +1,11 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "LeetHub-3.0",
   "description": "Automatically integrate your Leetcode submissions to GitHub",
   "homepage_url": "https://github.com/raphaelheinz/LeetHub-3.0",
   "version": "0.0.15",
   "author": "Raphael Heinz",
-  "action": {
+  "browser_action": {
     "default_icon": "assets/thumbnail.png",
     "default_popup": "src/html/popup.html"
   },
@@ -15,14 +15,13 @@
     "128": "assets/thumbnail.png"
   },
   "background": {
-    "service_worker": "src/js/background.js"
+    "scripts": ["src/js/browser-polyfill.js", "src/js/background.js"],
+    "persistent": true
   },
   "permissions": [
     "unlimitedStorage",
     "storage",
-    "tabs"
-  ],
-  "host_permissions": [
+    "tabs",
     "https://leetcode.com/*",
     "https://github.com/*",
     "https://api.github.com/*"
@@ -41,9 +40,7 @@
       "run_at": "document_idle"
     }
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'"
-  },
+  "content_security_policy": "script-src 'self'; object-src 'self'",
   "browser_specific_settings": {
     "gecko": {
       "id": "leethub@firefox.vthree",

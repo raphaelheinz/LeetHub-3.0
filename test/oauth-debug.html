@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>OAuth Debug Test</title>
+    <script src="../js/browser-polyfill.js"></script>
+</head>
+<body>
+    <h1>OAuth Debug Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Debug function to test OAuth flow components
+        function testOAuthComponents() {
+            const results = document.getElementById('results');
+            let html = '<h2>OAuth Component Tests</h2>';
+            
+            // Test 1: Check if we can make a request to GitHub API
+            html += '<h3>1. Testing GitHub API Access</h3>';
+            html += '<p id="api-test">Testing...</p>';
+            
+            // Test 2: Check storage permissions
+            html += '<h3>2. Testing Storage Access</h3>';
+            html += '<p id="storage-test">Testing...</p>';
+            
+            // Test 3: Check runtime messaging
+            html += '<h3>3. Testing Runtime Messaging</h3>';
+            html += '<p id="messaging-test">Testing...</p>';
+            
+            results.innerHTML = html;
+            
+            // Test GitHub API access
+            const xhr = new XMLHttpRequest();
+            xhr.addEventListener('readystatechange', function () {
+                if (xhr.readyState === 4) {
+                    const apiTest = document.getElementById('api-test');
+                    if (xhr.status === 401) {
+                        apiTest.innerHTML = '✅ PASS - GitHub API accessible (401 unauthorized expected)';
+                        apiTest.style.color = 'green';
+                    } else {
+                        apiTest.innerHTML = `❌ FAIL - GitHub API returned status: ${xhr.status}`;
+                        apiTest.style.color = 'red';
+                    }
+                }
+            });
+            xhr.addEventListener('error', function() {
+                const apiTest = document.getElementById('api-test');
+                apiTest.innerHTML = '❌ FAIL - Network error accessing GitHub API';
+                apiTest.style.color = 'red';
+            });
+            xhr.open('GET', 'https://api.github.com/user', true);
+            xhr.send();
+            
+            // Test storage access
+            try {
+                chrome.storage.local.set({oauth_test: 'test_value'}, () => {
+                    if (chrome.runtime.lastError) {
+                        const storageTest = document.getElementById('storage-test');
+                        storageTest.innerHTML = `❌ FAIL - Storage error: ${chrome.runtime.lastError.message}`;
+                        storageTest.style.color = 'red';
+                    } else {
+                        chrome.storage.local.get('oauth_test', (data) => {
+                            const storageTest = document.getElementById('storage-test');
+                            if (data.oauth_test === 'test_value') {
+                                storageTest.innerHTML = '✅ PASS - Storage access working';
+                                storageTest.style.color = 'green';
+                                // Clean up
+                                chrome.storage.local.remove('oauth_test');
+                            } else {
+                                storageTest.innerHTML = '❌ FAIL - Storage read/write failed';
+                                storageTest.style.color = 'red';
+                            }
+                        });
+                    }
+                });
+            } catch (error) {
+                const storageTest = document.getElementById('storage-test');
+                storageTest.innerHTML = `❌ FAIL - Storage exception: ${error.message}`;
+                storageTest.style.color = 'red';
+            }
+            
+            // Test runtime messaging
+            try {
+                chrome.runtime.sendMessage({test: true}, (response) => {
+                    const messagingTest = document.getElementById('messaging-test');
+                    if (chrome.runtime.lastError) {
+                        messagingTest.innerHTML = `❌ FAIL - Messaging error: ${chrome.runtime.lastError.message}`;
+                        messagingTest.style.color = 'red';
+                    } else {
+                        messagingTest.innerHTML = '✅ PASS - Runtime messaging working';
+                        messagingTest.style.color = 'green';
+                    }
+                });
+            } catch (error) {
+                const messagingTest = document.getElementById('messaging-test');
+                messagingTest.innerHTML = `❌ FAIL - Messaging exception: ${error.message}`;
+                messagingTest.style.color = 'red';
+            }
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testOAuthComponents);
+    </script>
+</body>
+</html>

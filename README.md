@@ -19,7 +19,15 @@
 
 ## What is LeetHub-3.0?
 
-A chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="http://leetcode.com/">Leetcode</a> problem. It's forked from <a href="https://github.com/arunbhardwaj/LeetHub-2.0">LeetHub-2.0</a> which is not compatible with Leetcode anymore since the latest updates.
+A cross-browser extension that automatically pushes your code to GitHub when you pass all tests on a <a href="http://leetcode.com/">Leetcode</a> problem. It's forked from <a href="https://github.com/arunbhardwaj/LeetHub-2.0">LeetHub-2.0</a> which is not compatible with Leetcode anymore since the latest updates.
+
+### Browser Support
+- ✅ **Chrome** (Manifest V3)
+- ✅ **Firefox** (Manifest V2) 
+- ✅ **Edge** (Chromium-based)
+- ✅ **Opera** (Chromium-based)
+
+> 📖 **See [Cross-Browser Compatibility Guide](CROSS_BROWSER_GUIDE.md) for detailed installation and building instructions for each browser.**
 
 
 ## Why LeetHub?
@@ -49,32 +57,48 @@ In the meantime, we have added a manual synchronization button next to notes ico
 
 ## Installation
 
+### Chrome/Edge/Opera
+
 <div align="center">
     <a href="https://chromewebstore.google.com/u/1/detail/leethub-v3/kdkgpjpenaeoodajljkflmlnkoihkmda" rel="Download leetcode plugin">
         <img src="https://embedsignage.com/wp-content/uploads/2016/04/embed-signage-chromeos-web-store-button.png" alt="Download leetcode plugin" width="300" />
     </a>
 </div>
 
-1. **Chrome Web Store**
+Install from Chrome Web Store (recommended for automatic updates).
 
-    Install this plugin using Chrome Web Store. Please find the link above. This is the preferred way of installation. Updates are installed automatically.
+### Firefox
 
+Firefox support is available! See the [Cross-Browser Compatibility Guide](CROSS_BROWSER_GUIDE.md) for detailed Firefox installation instructions.
 
-2. **(Optional) Manual installation**
+### Manual Installation (All Browsers)
 
-    You can also install the plugin manually. Please follow the steps below.
+For manual installation or development:
 
-    * Create your own OAuth app in GitHub (https://github.com/settings/applications/new) and store CLIENT_ID and CLIENT_SECRET confidentially
-        * Application name: [CUSTOM]
-        * Homepage URL: https://github.com/raphaelheinz/LeetHub-3.0
-        * Authorization callback URL: https://github.com/
-    * Download the project ZIP (<a href="https://github.com/raphaelheinz/LeetHub-3.0/releases">Releases</a>) or clone this repository
-    * Run ```npm run setup``` to install the developer dependencies
-    * Update CLIENT_ID and CLIENT_SECRET in ```src/js/authorize.js``` and ```src/js/oauth2.js``` with your ids
-    * Go to <a href="chrome://extensions">chrome://extensions</a>
-    * Enable <a href="https://www.mstoic.com/enable-developer-mode-in-chrome/">Developer mode</a> by toggling the switch on top right corner
-    * Click **"Load unpacked"**
-    * Select the entire LeetHub folder
+1. **Download and Setup**
+   ```bash
+   git clone https://github.com/raphaelheinz/LeetHub-3.0.git
+   cd LeetHub-3.0
+   npm run setup
+   ```
+
+2. **Build for your browser**
+   ```bash
+   # For Chrome/Edge/Opera
+   npm run build:chrome
+   
+   # For Firefox  
+   npm run build:firefox
+   
+   # For all browsers
+   npm run build:all
+   ```
+
+3. **Load Extension**
+   - **Chrome/Edge**: Go to `chrome://extensions`, enable Developer mode, click "Load unpacked", select `build/chrome/` folder
+   - **Firefox**: Go to `about:debugging`, click "This Firefox", click "Load Temporary Add-on", select `manifest.json` from `build/firefox/` folder
+
+> 📖 **For detailed instructions, OAuth setup, and troubleshooting, see [Cross-Browser Compatibility Guide](CROSS_BROWSER_GUIDE.md)**
 
 
 ## Setup
@@ -94,6 +118,9 @@ npm run format        # Auto-format JavaScript, HTML/CSS
 npm run format-test   # Test if code is formatted properly
 npm run lint          # Lint JavaScript
 npm run lint-test     # Test if code is linted properly
+npm run build:chrome  # Build Chrome/Edge/Opera extension
+npm run build:firefox # Build Firefox extension
+npm run build:all     # Build for all browsers
 ```
 
 ## Contribution

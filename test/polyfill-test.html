@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Browser Polyfill Test</title>
+    <script src="../js/browser-polyfill.js"></script>
+</head>
+<body>
+    <h1>Browser Polyfill Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        // Test function to verify polyfill is working
+        function testPolyfill() {
+            const results = document.getElementById('results');
+            const tests = [];
+            
+            // Test chrome API availability
+            tests.push({
+                name: 'chrome.runtime.getURL',
+                result: typeof chrome !== 'undefined' && typeof chrome.runtime !== 'undefined' && typeof chrome.runtime.getURL === 'function'
+            });
+            
+            tests.push({
+                name: 'chrome.storage.local.get',
+                result: typeof chrome !== 'undefined' && typeof chrome.storage !== 'undefined' && typeof chrome.storage.local.get === 'function'
+            });
+            
+            tests.push({
+                name: 'chrome.tabs.create',
+                result: typeof chrome !== 'undefined' && typeof chrome.tabs !== 'undefined' && typeof chrome.tabs.create === 'function'
+            });
+            
+            // Test browser API availability
+            tests.push({
+                name: 'browser.runtime.getURL',
+                result: typeof browser !== 'undefined' && typeof browser.runtime !== 'undefined' && typeof browser.runtime.getURL === 'function'
+            });
+            
+            tests.push({
+                name: 'browser.storage.local.get',
+                result: typeof browser !== 'undefined' && typeof browser.storage !== 'undefined' && typeof browser.storage.local.get === 'function'
+            });
+            
+            tests.push({
+                name: 'browser.tabs.create',
+                result: typeof browser !== 'undefined' && typeof browser.tabs !== 'undefined' && typeof browser.tabs.create === 'function'
+            });
+            
+            // Display results
+            let html = '<h2>Polyfill Test Results</h2>';
+            tests.forEach(test => {
+                const status = test.result ? '✅ PASS' : '❌ FAIL';
+                const color = test.result ? 'green' : 'red';
+                html += `<p style="color: ${color};">${status} - ${test.name}</p>`;
+            });
+            
+            // Add browser detection
+            const isFirefox = typeof browser !== 'undefined' && browser.runtime;
+            const isChrome = typeof chrome !== 'undefined' && chrome.runtime;
+            
+            html += '<h3>Browser Detection</h3>';
+            html += `<p>Firefox detected: ${isFirefox ? '✅ Yes' : '❌ No'}</p>`;
+            html += `<p>Chrome detected: ${isChrome ? '✅ Yes' : '❌ No'}</p>`;
+            
+            results.innerHTML = html;
+        }
+        
+        // Run test when page loads
+        window.addEventListener('load', testPolyfill);
+    </script>
+</body>
+</html>
