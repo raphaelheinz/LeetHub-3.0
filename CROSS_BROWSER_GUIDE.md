@@ -1,6 +1,9 @@
-# Cross-Browser Compatibility Guide
+## 🔁 Cross-Browser Compatibility
 
-LeetHub-3.0 is now compatible with both Chrome and Firefox! This guide explains how to build and install the extension for each browser.
+LeetHub now works on both **Chrome-based browsers** (Chrome, Edge, Opera) and **Firefox-based browsers** (like Zen browser).  
+This was achieved using `webextension-polyfill` and Firefox-specific manifest support.
+
+Thanks to [@NamanS4ini](https://github.com/NamanS4ini) for the cross-browser patch 🙌
 
 ## Browser Support
 
