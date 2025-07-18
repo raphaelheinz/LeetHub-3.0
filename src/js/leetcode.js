@@ -1,4 +1,3 @@
-
 /* Enum for languages supported by LeetCode. */
 const languages = {
   C: '.c',
@@ -88,10 +87,19 @@ function getLanguageFromExtension(extension) {
  * @param {string} problem - Problem slug or directory name (e.g., "0001-two-sum").
  * @param {string} filename - Name of the file to upload (e.g., "0001-two-sum.js").
  * @param {boolean} [useDifficultyFolder=true] - Whether to include the difficulty as a subfolder.
+ * @param {boolean} useLanguageFolder - Whether to include the language as a subfolder.
  * @returns {string} Full GitHub API URL for the file upload.
  */
 
-function constructGitHubPath(hook, basePath, difficulty, problem, filename, useDifficultyFolder, useLanguageFolder = false) {
+function constructGitHubPath(
+  hook,
+  basePath,
+  difficulty,
+  problem,
+  filename,
+  useDifficultyFolder,
+  useLanguageFolder = false,
+) {
   if (useLanguageFolder) {
     //split the filename to get the extension
     const fileExtension = filename.split('.').pop();
@@ -99,10 +107,10 @@ function constructGitHubPath(hook, basePath, difficulty, problem, filename, useD
     const language = getLanguageFromExtension(`.${fileExtension}`);
     console.log('Language:', language);
     if (language) {
-        const path = useDifficultyFolder
-          ? `${basePath}/${language}/${difficulty}/${problem}/${filename}`
-          : `/${language}/${problem}/${filename}`;
-        return `https://api.github.com/repos/${hook}/contents/${path}`;
+      const path = useDifficultyFolder
+        ? `${language}/${difficulty}/${problem}/${filename}`
+        : `/${language}/${problem}/${filename}`;
+      return `https://api.github.com/repos/${hook}/contents/${path}`;
     }
   }
   const path = useDifficultyFolder
@@ -147,7 +155,7 @@ const upload = (
   commitMsg,
   cb = undefined,
   useDifficultyFolder,
-  useLanguageFolder
+  useLanguageFolder,
 ) => {
   // const URL = `https://api.github.com/repos/${hook}/contents/${problem}/${filename}`;
   const URL = constructGitHubPath(
@@ -157,7 +165,7 @@ const upload = (
     problem,
     filename,
     useDifficultyFolder,
-    useLanguageFolder
+    useLanguageFolder,
   );
 
   /* Define Payload */
@@ -194,7 +202,7 @@ const upload = (
       return chrome.storage.local.set({ stats });
     })
     .then(() => {
-      console.log(`Successfully committed ${filename.split('.').pop()} to github`);
+      console.log(`Successfully committed ${filename} to github`);
       if (cb != undefined) {
         cb();
       }
@@ -250,7 +258,7 @@ const update = (
   shouldPreprendDiscussionPosts,
   cb = undefined,
   useDifficultyFolder,
-  useLanguageFolder
+  useLanguageFolder,
 ) => {
   let responseSHA;
   return getUpdatedData(token, hook, problem, filename, useDifficultyFolder, useLanguageFolder)
@@ -339,7 +347,7 @@ function uploadGit(
       if (action === 'upload') {
         /* Get SHA, if it exists */
         const sha = stats?.shas?.[problemName]?.[fileName] ?? '';
-    
+
         return upload(
           token,
           hook,
@@ -350,7 +358,7 @@ function uploadGit(
           commitMsg,
           cb,
           useDifficultyFolder,
-          useLanguageFolder
+          useLanguageFolder,
         );
       } else if (action === 'update') {
         return update(
@@ -369,7 +377,14 @@ function uploadGit(
     })
     .catch(err => {
       if (err.message === '409') {
-        return getUpdatedData(token, hook, problemName, fileName, useDifficultyFolder, useLanguageFolder);
+        return getUpdatedData(
+          token,
+          hook,
+          problemName,
+          fileName,
+          useDifficultyFolder,
+          useLanguageFolder,
+        );
       } else {
         throw err;
       }
@@ -393,7 +408,14 @@ function uploadGit(
 }
 
 /* Gets updated GitHub data for the specific file in repo in question */
-async function getUpdatedData(token, hook, problem, filename, useDifficultyFolder,useLanguageFolder) {
+async function getUpdatedData(
+  token,
+  hook,
+  problem,
+  filename,
+  useDifficultyFolder,
+  useLanguageFolder,
+) {
   const URL = constructGitHubPath(
     hook,
     basePath,
@@ -401,7 +423,7 @@ async function getUpdatedData(token, hook, problem, filename, useDifficultyFolde
     problem,
     filename,
     useDifficultyFolder,
-    useLanguageFolder
+    useLanguageFolder,
   );
 
   let options = {
@@ -898,7 +920,10 @@ LeetCodeV2.prototype.init = async function () {
     },
     body: JSON.stringify(submissionDetailsQuery),
   };
-  const submissionDetailsData = await fetch('https://leetcode.com/graphql/', submissionDetailsOptions)
+  const submissionDetailsData = await fetch(
+    'https://leetcode.com/graphql/',
+    submissionDetailsOptions,
+  )
     .then(res => res.json())
     .then(res => res.data.submissionDetails);
 
@@ -1011,7 +1036,7 @@ LeetCodeV2.prototype.parseStats = function () {
       timePercentile: runtimePercentile,
       space: this.submissionData.memoryDisplay,
       spacePercentile: spacePercentile,
-      problemTopic: this.questionDetails?.topicTags?.[0]?.name ?? 'UNKNOWN'
+      problemTopic: this.questionDetails?.topicTags?.[0]?.name ?? 'UNKNOWN',
     };
   }
 
