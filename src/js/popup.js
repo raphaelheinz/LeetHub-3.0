@@ -60,10 +60,8 @@ $('#collapsible-language-icon').click(() => {
 // Store Switch State
 $('#use-language-folder').change(function () {
   const isChecked = $(this).is(':checked');
-  chrome.storage.local.set({ useDifficultyFolder: isChecked });
+  chrome.storage.local.set({ useLanguageFolder: isChecked });
 });
-
-
 
 // Toggle timestamped filenames section
 $('#collapsible-timestamp-icon').click(() => {
