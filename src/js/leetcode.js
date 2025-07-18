@@ -276,6 +276,7 @@ function uploadGit(
   let token;
   let hook;
   let useDifficultyFolder = false;
+  let useLanguageFolder = false;
 
   return chrome.storage.local
     .get('leethub_token')
@@ -301,13 +302,17 @@ function uploadGit(
     })
     .then(result => {
       useDifficultyFolder = result.useDifficultyFolder || false;
+      return chrome.storage.local.get('useLanguageFolder');
+    })
+    .then(result => {
+      useLanguageFolder = result.useLanguageFolder || false;
       return chrome.storage.local.get('stats');
     })
     .then(({ stats }) => {
       if (action === 'upload') {
         /* Get SHA, if it exists */
         const sha = stats?.shas?.[problemName]?.[fileName] ?? '';
-
+    
         return upload(
           token,
           hook,
