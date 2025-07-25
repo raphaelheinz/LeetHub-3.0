@@ -46,6 +46,23 @@ $('#use-difficulty-folder').change(function () {
   chrome.storage.local.set({ useDifficultyFolder: isChecked });
 });
 
+// Toggle language folder section
+$('#collapsible-language-icon').click(() => {
+  $('#collapsible-language-icon').toggleClass('open');
+  $('#collapsible-language-container').toggle();
+
+  // Load from storage: use default value 'false' if not set
+  chrome.storage.local.get({ useLanguageFolder: false }, data => {
+    $('#use-language-folder').prop('checked', data.useLanguageFolder);
+  });
+});
+
+// Store Switch State
+$('#use-language-folder').change(function () {
+  const isChecked = $(this).is(':checked');
+  chrome.storage.local.set({ useLanguageFolder: isChecked });
+});
+
 // Toggle timestamped filenames section
 $('#collapsible-timestamp-icon').click(() => {
   $('#collapsible-timestamp-icon').toggleClass('open');
