@@ -19,7 +19,7 @@
 
 ## What is LeetHub-3.0?
 
-A chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="http://leetcode.com/">Leetcode</a> problem. It's forked from <a href="https://github.com/arunbhardwaj/LeetHub-2.0">LeetHub-2.0</a> which is not compatible with Leetcode anymore since the latest updates.
+A chrome extension that automatically pushes your code to GitHub when you pass all tests on a <a href="https://leetcode.com/">Leetcode</a> or <a href="https://leetcode.cn/">Leetcode CN</a> problem. It's forked from <a href="https://github.com/arunbhardwaj/LeetHub-2.0">LeetHub-2.0</a> which is not compatible with Leetcode anymore since the latest updates.
 
 
 ## Why LeetHub?
@@ -31,6 +31,12 @@ There's no easy way of accessing your leetcode problems in one place! Moreover, 
 <h1 align="center">
     <img src="assets/extension/4.png" alt="leetcode view" width="800">
 </h1>
+
+## Supported Platforms
+
+LeetHub-3.0 supports both:
+- **LeetCode.com** (English)
+- **LeetCode.cn** (Chinese/力扣)
 
 ## Supported UI
 
