@@ -1,9 +1,22 @@
+/* Helper function to get the current LeetCode base URL */
+function getLeetCodeBaseUrl() {
+  const hostname = window.location.hostname;
+  let domain;
+  if (hostname.includes('leetcode.cn')) {
+    domain = 'leetcode.cn';
+  } else {
+    domain = 'leetcode.com';
+  }
+  return `https://${domain}`;
+}
+
 /* Enum for languages supported by LeetCode. */
 const languages = {
   C: '.c',
   'C++': '.cpp',
   'C#': '.cs',
   Bash: '.sh',
+  Cangjie: '.cj', // LeetCode CN specific
   Dart: '.dart',
   Elixir: '.ex',
   Erlang: '.erl',
@@ -600,7 +613,7 @@ LeetCodeV1.prototype.findAndUploadCode = function (
   if (checkElem(e)) {
     // for normal problem submisson
     const submissionRef = e[1].innerHTML.split(' ')[1];
-    submissionURL = 'https://leetcode.com' + submissionRef.split('=')[1].slice(1, -1);
+    submissionURL = getLeetCodeBaseUrl() + submissionRef.split('=')[1].slice(1, -1);
   } else {
     // for a submission in explore section
     const submissionRef = document.getElementById('result-state');
@@ -693,7 +706,7 @@ LeetCodeV1.prototype.getLanguageExtension = function () {
  this is because the dom is populated after data is fetched by opening the note */
 LeetCodeV1.prototype.getNotesIfAny = function () {
   // there are no notes on expore
-  if (document.URL.startsWith('https://leetcode.com/explore/')) return '';
+  if (document.URL.startsWith(`${getLeetCodeBaseUrl()}/explore/`)) return '';
 
   let notes = '';
   if (
@@ -849,7 +862,7 @@ LeetCodeV1.prototype.injectSpinnerStyle = function () {
 };
 /* Inserts an anchor element that is specific to the page you are on (e.g. Explore) */
 LeetCodeV1.prototype.insertToAnchorElement = function (elem) {
-  if (document.URL.startsWith('https://leetcode.com/explore/')) {
+  if (document.URL.startsWith('${getLeetCodeBaseUrl()}/explore/')) {
     const action = document.getElementsByClassName('action');
     if (
       checkElem(action) &&
@@ -897,21 +910,66 @@ function LeetCodeV2() {
   this.injectSpinnerStyle();
 }
 LeetCodeV2.prototype.init = async function () {
-  const problem = document.URL.match(/leetcode.com\/problems\/([^/]*)\//);
-  const val = await chrome.storage.local.get(problem[1]);
+  const problem = document.URL.match(/leetcode\.(com|cn)\/problems\/([^/]*)\//);
+  const val = await chrome.storage.local.get(problem[2]);
   if (!val) {
     alert('Have you submitted this problem yet?');
     return false;
   }
-  const submissionId = val[problem[1]];
-
+  const submissionId = val[problem[2]];
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
+  const isCN = getLeetCodeBaseUrl() === 'https://leetcode.cn';
   const submissionDetailsQuery = {
-    query:
-      '\n    query submissionDetails($submissionId: Int!) {\n  submissionDetails(submissionId: $submissionId) {\n    runtime\n    runtimeDisplay\n    runtimePercentile\n    runtimeDistribution\n    memory\n    memoryDisplay\n    memoryPercentile\n    memoryDistribution\n    code\n    timestamp\n    statusCode\n    lang {\n      name\n      verboseName\n    }\n    question {\n      questionId\n    questionFrontendId\n    title\n    titleSlug\n    content\n    difficulty\n    }\n    notes\n    topicTags {\n      tagId\n      slug\n      name\n    }\n    runtimeError\n  }\n}\n    ',
+    query: isCN
+      ? `
+query submissionDetails($submissionId: ID!) {
+  submissionDetail(submissionId: $submissionId) {
+    code
+    timestamp
+    statusDisplay
+    isMine
+    lang
+    langVerboseName
+    runtimeDisplay: runtime
+    memoryDisplay: memory
+
+    memory: rawMemory
+
+    runtimePercentile
+    memoryPercentile
+
+    question {
+      questionId
+      titleSlug
+      hasFrontendPreview
+    }
+
+    user {
+      realName
+      userAvatar
+      userSlug
+    }
+
+    passedTestCaseCnt
+    totalTestCaseCnt
+
+    ... on GeneralSubmissionNode {
+      outputDetail {
+        codeOutput
+        expectedOutput
+        input
+        compileError
+        runtimeError # in outputDetail
+        lastTestcase
+      }
+    }
+  }
+}`
+      : '\n    query submissionDetails($submissionId: Int!) {\n  submissionDetails(submissionId: $submissionId) {\n    runtime\n    runtimeDisplay\n    runtimePercentile\n    runtimeDistribution\n    memory\n    memoryDisplay\n    memoryPercentile\n    memoryDistribution\n    code\n    timestamp\n    statusCode\n    lang {\n      name\n      verboseName\n    }\n    question {\n      questionId\n    questionFrontendId\n    title\n    titleSlug\n    content\n    difficulty\n    }\n    notes\n    topicTags {\n      tagId\n      slug\n      name\n    }\n    runtimeError\n  }\n}\n    ',
     variables: { submissionId: submissionId },
     operationName: 'submissionDetails',
   };
+  console.info('LeetHub:', { submissionDetailsQuery });
   const submissionDetailsOptions = {
     method: 'POST',
     headers: {
@@ -921,12 +979,12 @@ LeetCodeV2.prototype.init = async function () {
     body: JSON.stringify(submissionDetailsQuery),
   };
   const submissionDetailsData = await fetch(
-    'https://leetcode.com/graphql/',
+    `${getLeetCodeBaseUrl()}/graphql/`,
     submissionDetailsOptions,
   )
     .then(res => res.json())
-    .then(res => res.data.submissionDetails);
-
+    .then(res => (isCN ? res.data.submissionDetail : res.data.submissionDetails));
+  console.info('LeetHub:', { submissionDetailsData });
   this.submissionData = submissionDetailsData;
 
   const questionDetailsQuery = {
@@ -943,7 +1001,10 @@ LeetCodeV2.prototype.init = async function () {
     },
     body: JSON.stringify(questionDetailsQuery),
   };
-  const questionDetailsData = await fetch('https://leetcode.com/graphql/', questionDetailsOptions)
+  const questionDetailsData = await fetch(
+    getLeetCodeBaseUrl() + '/graphql/',
+    questionDetailsOptions,
+  )
     .then(res => res.json())
     .then(res => res.data.question);
   this.questionDetails = questionDetailsData;
@@ -984,7 +1045,7 @@ LeetCodeV2.prototype.getCode = function () {
 };
 LeetCodeV2.prototype.getLanguageExtension = function () {
   if (this.submissionData != null) {
-    return languages[this.submissionData.lang.verboseName];
+    return languages[this.submissionData.lang.verboseName ?? this.submissionData.langVerboseName];
   }
 
   const tag = document.querySelector('button[id^="headlessui-listbox-button"]');
@@ -1003,7 +1064,7 @@ LeetCodeV2.prototype.getLanguageExtension = function () {
 LeetCodeV2.prototype.getNotesIfAny = function () {};
 
 LeetCodeV2.prototype.extractQuestionNumber = function () {
-  return this.submissionData.question.questionFrontendId;
+  return this.submissionData.question.questionFrontendId ?? this.submissionData.question.questionId;
 };
 
 /**
@@ -1129,7 +1190,7 @@ LeetCodeV2.prototype.injectSpinnerStyle = function () {
   document.head.append(style);
 };
 LeetCodeV2.prototype.insertToAnchorElement = function (elem) {
-  if (document.URL.startsWith('https://leetcode.com/explore/')) {
+  if (document.URL.startsWith('${getLeetCodeBaseUrl()}/explore/')) {
     // TODO: support spinner when answering problems on Explore pages
     //   action = document.getElementsByClassName('action');
     //   if (
@@ -1210,10 +1271,10 @@ function isValidSuffix(string) {
 
 LeetCodeV2.prototype.addUrlChangeListener = function () {
   window.navigation.addEventListener('navigate', _ => {
-    const problem = window.location.href.match(/leetcode.com\/problems\/(.*)\/submissions/);
+    const problem = window.location.href.match(/leetcode\.(com|cn)\/problems\/(.*)\/submissions/);
     const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
-    if (problem && problem.length > 1 && submissionId && submissionId.length > 1) {
-      chrome.storage.local.set({ [problem[1]]: submissionId[1] });
+    if (problem && problem.length > 2 && submissionId && submissionId.length > 1) {
+      chrome.storage.local.set({ [problem[2]]: submissionId[1] });
     }
   });
 };

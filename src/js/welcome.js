@@ -50,7 +50,7 @@ const statusCode = (res, status, name) => {
       chrome.storage.local.set({ mode_type: 'commit' }, () => {
         $('#error').hide();
         $('#success').html(
-          `Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="http://leetcode.com">LeetCoding</a>!`,
+          `Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="https://leetcode.com">LeetCoding</a> or <a href="https://leetcode.cn">力扣</a>!`,
         );
         $('#success').show();
         $('#unlink').show();

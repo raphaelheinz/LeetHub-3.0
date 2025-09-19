@@ -25,6 +25,7 @@
     {
       "matches": [
         "https://leetcode.com/*",
+        "https://leetcode.cn/*",
         "https://github.com/*"
       ],
       "js": [
