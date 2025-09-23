@@ -1,15 +1,35 @@
+/* LeetHub: Network Interceptor for Submission ID */
+let lastSubmissionId = null; // A global variable to store the latest submission ID
+
+const originalFetch = window.fetch;
+window.fetch = async (...args) => {
+  const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+
+  const response = await originalFetch(...args);
+
+  // Check if the request URL contains both '/problems/' and '/submit/' paths.
+  if (url.includes('/problems/') && url.includes('/submit/')) {
+    try {
+      const clonedResponse = response.clone();
+      const data = await clonedResponse.json();
+      if (data && data.submission_id) {
+        console.log('[LeetHub] Captured submission_id:', data.submission_id);
+        lastSubmissionId = data.submission_id;
+      }
+    } catch (error) {
+      // If the response is not JSON, an error will occur, so we ignore it.
+    }
+  }
+
+  return response;
+};
+/* End of LeetHub Interceptor */
+
 /* Helper function to get the current LeetCode base URL */
 function getLeetCodeBaseUrl() {
   const hostname = window.location.hostname;
-  let domain;
-  if (hostname.includes('leetcode.cn')) {
-    domain = 'leetcode.cn';
-  } else {
-    domain = 'leetcode.com';
-  }
-  return `https://${domain}`;
+  return `https://${hostname.includes('leetcode.cn') ? 'leetcode.cn' : 'leetcode.com'}`;
 }
-
 /* Enum for languages supported by LeetCode. */
 const languages = {
   C: '.c',
@@ -45,9 +65,6 @@ const languages = {
 const readmeMsg = 'Create README - LeetHub';
 const discussionMsg = 'Prepend discussion post - LeetHub';
 const createNotesMsg = 'Attach NOTES - LeetHub';
-
-// SubFolder
-const basePath = 'LeetCode';
 
 /* Difficulty of most recenty submitted question */
 let difficulty = '';
@@ -95,7 +112,6 @@ function getLanguageFromExtension(extension) {
  * Constructs the full GitHub API URL to upload a file to a specific path in the repository.
  *
  * @param {string} hook - GitHub repository path in the format "username/repo".
- * @param {string} basePath - Base folder path where the file will be uploaded (e.g., "algorithm/LeetCode").
  * @param {string} difficulty - Problem difficulty (e.g., "Easy", "Medium", "Hard").
  * @param {string} problem - Problem slug or directory name (e.g., "0001-two-sum").
  * @param {string} filename - Name of the file to upload (e.g., "0001-two-sum.js").
@@ -106,7 +122,6 @@ function getLanguageFromExtension(extension) {
 
 function constructGitHubPath(
   hook,
-  basePath,
   difficulty,
   problem,
   filename,
@@ -127,7 +142,7 @@ function constructGitHubPath(
     }
   }
   const path = useDifficultyFolder
-    ? `${basePath}/${difficulty}/${problem}/${filename}`
+    ? `${difficulty}/${problem}/${filename}`
     : `${problem}/${filename}`;
   return `https://api.github.com/repos/${hook}/contents/${path}`;
 }
@@ -173,7 +188,6 @@ const upload = (
   // const URL = `https://api.github.com/repos/${hook}/contents/${problem}/${filename}`;
   const URL = constructGitHubPath(
     hook,
-    basePath,
     difficulty,
     problem,
     filename,
@@ -431,7 +445,6 @@ async function getUpdatedData(
 ) {
   const URL = constructGitHubPath(
     hook,
-    basePath,
     difficulty,
     problem,
     filename,
@@ -902,21 +915,82 @@ LeetCodeV1.prototype.markUploadFailed = function () {
       'display: inline-block;transform: rotate(45deg);height:24px;width:12px;border-bottom:7px solid red;border-right:7px solid red;';
   }
 };
+/**
+ * Injects the interceptor script into the page's "Main World"
+ * and listens for messages from the injected script.
+ */
+LeetCodeV2.prototype.injectAndListen = function () {
+  // 1. Define the script code to be injected directly into the page as a string.
+  const interceptorCode = `
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+      
+      // CCTV: Now monitoring LeetCode's actual fetch, so all requests will be visible.
+      console.log('[LeetHub Injected Intercept]', url);
+
+      const response = await originalFetch(...args);
+
+      if (url.includes('/problems/') && url.includes('/submit/')) {
+        try {
+          const clonedResponse = response.clone();
+          const data = await clonedResponse.json();
+          if (data && data.submission_id) {
+            // If an ID is found, send a message to the content script.
+            window.postMessage({
+              type: 'LEETHUB_SUBMISSION_ID',
+              submissionId: data.submission_id
+            }, '*');
+          }
+        } catch (e) {}
+      }
+      return response;
+    };
+  `;
+
+  // 2. Create a <script> tag, insert the above code, and append it to the page's <head>.
+  const script = document.createElement('script');
+  script.textContent = interceptorCode;
+  (document.head || document.documentElement).appendChild(script);
+  // Remove the injected script after use to keep the page clean.
+  script.remove();
+
+  // 3. Set up a listener to receive messages from the injected script.
+  window.addEventListener('message', (event) => {
+    // Check if the message is from our script.
+    if (event.source === window && event.data && event.data.type === 'LEETHUB_SUBMISSION_ID') {
+      console.log('[LeetHub] Received submission ID from injected script:', event.data.submissionId);
+      // Once the ID is received, start the commit process.
+      this.processSubmission(event.data.submissionId);
+    }
+  });
+};
+
+/**
+ * The main function that handles the entire commit process based on the submissionId.
+ */
+LeetCodeV2.prototype.processSubmission = async function (submissionId) {
+  // Set the submissionId as a global variable so the existing init function can use it.
+  window.leethubLastSubmissionId = submissionId;
+
+  // Directly call the loader from the existing code.
+  loader(this);
+};
 
 function LeetCodeV2() {
   this.submissionData;
   this.progressSpinnerElementId = 'leethub_progress_elem';
   this.progressSpinnerElementClass = 'leethub_progress';
   this.injectSpinnerStyle();
+  this.addManualSubmitButton();
+  this.injectAndListen();
 }
 LeetCodeV2.prototype.init = async function () {
-  const problem = document.URL.match(/leetcode\.(com|cn)\/problems\/([^/]*)\//);
-  const val = await chrome.storage.local.get(problem[2]);
-  if (!val) {
-    alert('Have you submitted this problem yet?');
-    return false;
-  }
-  const submissionId = val[problem[2]];
+    const submissionId = window.leethubLastSubmissionId;
+    if (!submissionId) {
+      alert('Could not find a recent submission ID. Please try submitting again.');
+      throw new Error('Leethub: lastSubmissionId is null.');
+    }
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const isCN = getLeetCodeBaseUrl() === 'https://leetcode.cn';
   const submissionDetailsQuery = {
@@ -1429,47 +1503,4 @@ function submitByShortcuts(event, leetCodeV2) {
     loader(leetCodeV2);
   }
 }
-
-// Use MutationObserver to determine when the submit button elements are loaded
-const observer = new MutationObserver(function (_mutations, observer) {
-  const v1SubmitBtn = document.querySelector('[data-cy="submit-code-btn"]');
-  const v2SubmitBtn = document.querySelector('[data-e2e-locator="console-submit-button"]');
-  const textareaList = document.getElementsByTagName('textarea');
-  const textarea =
-    textareaList.length === 4
-      ? textareaList[2]
-      : textareaList.length === 2
-        ? textareaList[0]
-        : textareaList[1];
-
-  if (v1SubmitBtn) {
-    observer.disconnect();
-
-    const leetCode = new LeetCodeV1();
-    v1SubmitBtn.addEventListener('click', () => loader(leetCode));
-    return;
-  }
-
-  if (v2SubmitBtn && textarea) {
-    observer.disconnect();
-
-    const leetCode = new LeetCodeV2();
-    v2SubmitBtn.addEventListener('click', () => loader(leetCode));
-    textarea.addEventListener('keydown', e => submitByShortcuts(e, leetCode));
-    leetCode.addManualSubmitButton();
-  }
-});
-
-setTimeout(() => {
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-}, 2000);
-
-// add url change listener & manual submit button if it does not exist already
-setTimeout(() => {
-  const leetCode = new LeetCodeV2();
-  leetCode.addManualSubmitButton();
-  leetCode.addUrlChangeListener();
-}, 6000);
+new LeetCodeV2();
