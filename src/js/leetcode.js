@@ -1,13 +1,7 @@
 /* Helper function to get the current LeetCode base URL */
 function getLeetCodeBaseUrl() {
   const hostname = window.location.hostname;
-  let domain;
-  if (hostname.includes('leetcode.cn')) {
-    domain = 'leetcode.cn';
-  } else {
-    domain = 'leetcode.com';
-  }
-  return `https://${domain}`;
+  return `https://${hostname.includes('leetcode.cn') ? 'leetcode.cn' : 'leetcode.com'}`;
 }
 
 /* Enum for languages supported by LeetCode. */
@@ -1031,21 +1025,57 @@ LeetCodeV1.prototype.markUploadFailed = function () {
       'display: inline-block;transform: rotate(45deg);height:24px;width:12px;border-bottom:7px solid red;border-right:7px solid red;';
   }
 };
+/**
+ * Injects the interceptor script into the page's "Main World"
+ * and listens for messages from the injected script.
+ */
+LeetCodeV2.prototype.injectAndListen = function () {
+  // 1. Create a <script> tag that loads the external interceptor file
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL('src/js/interceptor.js');
+  script.onload = () => {
+    // Clean up: remove the script tag after it has been loaded
+    script.remove();
+  };
+  
+  (document.head || document.documentElement).appendChild(script);
+
+  // 2. Set up a listener to receive messages from the injected script.
+  window.addEventListener('message', (event) => {
+    // Check if the message is from our script.
+    if (event.source === window && event.data && event.data.type === 'LEETHUB_SUBMISSION_ID') {
+      console.log('[LeetHub] Received submission ID from injected script:', event.data.submissionId);
+      // Once the ID is received, start the commit process.
+      this.processSubmission(event.data.submissionId);
+    }
+  });
+};
+
+/**
+ * The main function that handles the entire commit process based on the submissionId.
+ */
+LeetCodeV2.prototype.processSubmission = async function (submissionId) {
+  // Set the submissionId as a global variable so the existing init function can use it.
+  window.leethubLastSubmissionId = submissionId;
+
+  // Directly call the loader from the existing code.
+  loader(this);
+};
 
 function LeetCodeV2() {
   this.submissionData;
   this.progressSpinnerElementId = 'leethub_progress_elem';
   this.progressSpinnerElementClass = 'leethub_progress';
   this.injectSpinnerStyle();
+  this.addManualSubmitButton();
+  this.injectAndListen();
 }
 LeetCodeV2.prototype.init = async function () {
-  const problem = document.URL.match(/leetcode\.(com|cn)\/problems\/([^/]*)\//);
-  const val = await chrome.storage.local.get(problem[2]);
-  if (!val) {
-    alert('Have you submitted this problem yet?');
-    return false;
-  }
-  const submissionId = val[problem[2]];
+    const submissionId = window.leethubLastSubmissionId;
+    if (!submissionId) {
+      alert('Could not find a recent submission ID. Please try submitting again.');
+      return;
+    }
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const isCN = getLeetCodeBaseUrl() === 'https://leetcode.cn';
   const submissionDetailsQuery = {
@@ -1538,7 +1568,7 @@ const loader = (leetCode, suffix) => {
 
       /* Group problem into its relevant topics */
       const updateRepoReadMe = updateReadmeTopicTagsWithProblem(
-        leetCode.submissionData?.question?.topicTags,
+        leetCode.questionDetails?.topicTags,
         problemName
       );
 
@@ -1595,9 +1625,8 @@ const observer = new MutationObserver(function (_mutations, observer) {
     observer.disconnect();
 
     const leetCode = new LeetCodeV2();
-    v2SubmitBtn.addEventListener('click', () => loader(leetCode));
+    //v2SubmitBtn.addEventListener('click', () => loader(leetCode));
     textarea.addEventListener('keydown', e => submitByShortcuts(e, leetCode));
-    leetCode.addManualSubmitButton();
   }
 });
 
@@ -1608,12 +1637,6 @@ setTimeout(() => {
   });
 }, 2000);
 
-// add url change listener & manual submit button if it does not exist already
-setTimeout(() => {
-  const leetCode = new LeetCodeV2();
-  leetCode.addManualSubmitButton();
-  leetCode.addUrlChangeListener();
-}, 6000);
 
 /**
  * @param {string} topic - Topic to which the problem will be added.
