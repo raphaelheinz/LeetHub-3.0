@@ -1,20 +1,3 @@
-console.log('LeetHub: Content script loaded on', window.location.href);
-
-// Listen for solution post events from the interceptor script running in MAIN world
-window.addEventListener('leetHubSolutionPost', (event) => {
-  console.log('LeetHub: Received solution post event:', event.detail);
-  const { questionSlug, content, title } = event.detail;
-  // Handle the solution post asynchronously (defined later in script)
-  setTimeout(() => {
-    if (typeof handleSolutionPost === 'function') {
-      handleSolutionPost(questionSlug, content, title);
-    } else {
-      console.log('LeetHub: handleSolutionPost not yet defined, retrying...');
-      setTimeout(() => handleSolutionPost(questionSlug, content, title), 1000);
-    }
-  }, 100);
-});
-
 /* Helper function to get the current LeetCode base URL */
 function getLeetCodeBaseUrl() {
   const hostname = window.location.hostname;
@@ -1047,24 +1030,15 @@ LeetCodeV1.prototype.markUploadFailed = function () {
  * and listens for messages from the injected script.
  */
 LeetCodeV2.prototype.injectAndListen = function () {
-  // 1. Create a <script> tag that loads the external interceptor file
-  const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('src/js/interceptor.js');
-  script.onload = () => {
-    // Clean up: remove the script tag after it has been loaded
-    script.remove();
-  };
-  
-  (document.head || document.documentElement).appendChild(script);
+  window.addEventListener('leetHubSubmissionId', (event) => {
+    console.log('[LeetHub] Received submission ID:', event.detail.submissionId);
+    this.processSubmission(event.detail.submissionId);
+  });
 
-  // 2. Set up a listener to receive messages from the injected script.
-  window.addEventListener('message', (event) => {
-    // Check if the message is from our script.
-    if (event.source === window && event.data && event.data.type === 'LEETHUB_SUBMISSION_ID') {
-      console.log('[LeetHub] Received submission ID from injected script:', event.data.submissionId);
-      // Once the ID is received, start the commit process.
-      this.processSubmission(event.data.submissionId);
-    }
+  window.addEventListener('leetHubSolutionPost', (event) => {
+    const { questionSlug, content, title } = event.detail;
+    console.log('LeetHub: Received solution post event:', event.detail);
+    this.handleSolutionPost(questionSlug, content, title);
   });
 };
 
@@ -1606,17 +1580,6 @@ const loader = (leetCode, suffix) => {
   }, 1000);
 };
 
-const isMacOS = window.navigator.userAgent.includes('Mac');
-
-// Submit by Keyboard Shortcuts only support on LeetCode v2
-function submitByShortcuts(event, leetCodeV2) {
-  const isEnterKey = event.key === 'Enter';
-
-  // Adapt to MacOS operating system
-  if (isEnterKey && ((isMacOS && event.metaKey) || (!isMacOS && event.ctrlKey))) {
-    loader(leetCodeV2);
-  }
-}
 
 // Use MutationObserver to determine when the submit button elements are loaded
 const observer = new MutationObserver(function (_mutations, observer) {
@@ -1641,9 +1604,7 @@ const observer = new MutationObserver(function (_mutations, observer) {
   if (v2SubmitBtn && textarea) {
     observer.disconnect();
 
-    const leetCode = new LeetCodeV2();
-    //v2SubmitBtn.addEventListener('click', () => loader(leetCode));
-    textarea.addEventListener('keydown', e => submitByShortcuts(e, leetCode));
+    new LeetCodeV2();
   }
 });
 
@@ -1939,8 +1900,9 @@ async function getLastCommitMessage(problemName) {
             const message = commit.commit.message;
             
             // Skip commits for README, NOTES, or previous solution posts
-            if (message.includes('Create README') || 
-                message.includes('Attach NOTES') || 
+            if (message.includes('Create readme') || 
+                message.includes('Attach Notes') || 
+                message.includes('Prepend discussion') || 
                 message.includes('solution post') ||
                 message.includes('Add solution post')) {
               continue;
@@ -1968,7 +1930,7 @@ async function getLastCommitMessage(problemName) {
 }
 
 // Function to handle solution post upload
-async function handleSolutionPost(questionSlug, content, title) {
+LeetCodeV2.prototype.handleSolutionPost = async function (questionSlug, content, title) {
   try {
     // Check if auto-commit solution post is enabled (default: true)
     const { autoCommitSolutionPost = true } =
