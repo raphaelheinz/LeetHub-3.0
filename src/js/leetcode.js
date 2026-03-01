@@ -1,30 +1,3 @@
-/* LeetHub: Network Interceptor for Submission ID */
-let lastSubmissionId = null; // A global variable to store the latest submission ID
-
-const originalFetch = window.fetch;
-window.fetch = async (...args) => {
-  const url = typeof args[0] === 'string' ? args[0] : args[0].url;
-
-  const response = await originalFetch(...args);
-
-  // Check if the request URL contains both '/problems/' and '/submit/' paths.
-  if (url.includes('/problems/') && url.includes('/submit/')) {
-    try {
-      const clonedResponse = response.clone();
-      const data = await clonedResponse.json();
-      if (data && data.submission_id) {
-        console.log('[LeetHub] Captured submission_id:', data.submission_id);
-        lastSubmissionId = data.submission_id;
-      }
-    } catch (error) {
-      // If the response is not JSON, an error will occur, so we ignore it.
-    }
-  }
-
-  return response;
-};
-/* End of LeetHub Interceptor */
-
 /* Helper function to get the current LeetCode base URL */
 function getLeetCodeBaseUrl() {
   const hostname = window.location.hostname;
@@ -1057,42 +1030,17 @@ LeetCodeV1.prototype.markUploadFailed = function () {
  * and listens for messages from the injected script.
  */
 LeetCodeV2.prototype.injectAndListen = function () {
-  // 1. Define the script code to be injected directly into the page as a string.
-  const interceptorCode = `
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      const url = typeof args[0] === 'string' ? args[0] : args[0].url;
-      
-      // CCTV: Now monitoring LeetCode's actual fetch, so all requests will be visible.
-      console.log('[LeetHub Injected Intercept]', url);
-
-      const response = await originalFetch(...args);
-
-      if (url.includes('/problems/') && url.includes('/submit/')) {
-        try {
-          const clonedResponse = response.clone();
-          const data = await clonedResponse.json();
-          if (data && data.submission_id) {
-            // If an ID is found, send a message to the content script.
-            window.postMessage({
-              type: 'LEETHUB_SUBMISSION_ID',
-              submissionId: data.submission_id
-            }, '*');
-          }
-        } catch (e) {}
-      }
-      return response;
-    };
-  `;
-
-  // 2. Create a <script> tag, insert the above code, and append it to the page's <head>.
+  // 1. Create a <script> tag that loads the external interceptor file
   const script = document.createElement('script');
-  script.textContent = interceptorCode;
+  script.src = chrome.runtime.getURL('src/js/interceptor.js');
+  script.onload = () => {
+    // Clean up: remove the script tag after it has been loaded
+    script.remove();
+  };
+  
   (document.head || document.documentElement).appendChild(script);
-  // Remove the injected script after use to keep the page clean.
-  script.remove();
 
-  // 3. Set up a listener to receive messages from the injected script.
+  // 2. Set up a listener to receive messages from the injected script.
   window.addEventListener('message', (event) => {
     // Check if the message is from our script.
     if (event.source === window && event.data && event.data.type === 'LEETHUB_SUBMISSION_ID') {
@@ -1126,7 +1074,7 @@ LeetCodeV2.prototype.init = async function () {
     const submissionId = window.leethubLastSubmissionId;
     if (!submissionId) {
       alert('Could not find a recent submission ID. Please try submitting again.');
-      throw new Error('Leethub: lastSubmissionId is null.');
+      return;
     }
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const isCN = getLeetCodeBaseUrl() === 'https://leetcode.cn';
@@ -1652,4 +1600,212 @@ function submitByShortcuts(event, leetCodeV2) {
     loader(leetCodeV2);
   }
 }
-new LeetCodeV2();
+
+// Use MutationObserver to determine when the submit button elements are loaded
+const observer = new MutationObserver(function (_mutations, observer) {
+  const v1SubmitBtn = document.querySelector('[data-cy="submit-code-btn"]');
+  const v2SubmitBtn = document.querySelector('[data-e2e-locator="console-submit-button"]');
+  const textareaList = document.getElementsByTagName('textarea');
+  const textarea =
+    textareaList.length === 4
+      ? textareaList[2]
+      : textareaList.length === 2
+        ? textareaList[0]
+        : textareaList[1];
+
+  if (v1SubmitBtn) {
+    observer.disconnect();
+
+    const leetCode = new LeetCodeV1();
+    v1SubmitBtn.addEventListener('click', () => loader(leetCode));
+    return;
+  }
+
+  if (v2SubmitBtn && textarea) {
+    observer.disconnect();
+
+    const leetCode = new LeetCodeV2();
+    //v2SubmitBtn.addEventListener('click', () => loader(leetCode));
+    textarea.addEventListener('keydown', e => submitByShortcuts(e, leetCode));
+  }
+});
+
+setTimeout(() => {
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+}, 2000);
+
+
+/**
+ * @param {string} topic - Topic to which the problem will be added.
+ * @param {string} markdownFile - The markdown file content.
+ * @param {string} hook - github hook (username/repo).
+ * @param {string} problem - Problem name.
+ *
+ * @returns {string} - The updated markdown file content.
+ */
+async function appendProblemToReadme(topic, markdownFile, hook, problem) {
+  const { useDifficultyFolder = false } = await chrome.storage.local.get('useDifficultyFolder');
+  const { useLanguageFolder = false } = await chrome.storage.local.get('useLanguageFolder');
+  const filePath = problem ? `${problem}/` : '';
+
+  let path = '';
+  if (useLanguageFolder) {
+    const language = last_language;
+    console.log('Language:', language);
+    if (language) {
+      path = useDifficultyFolder
+        ? `${language}/${difficulty}/${filePath}`
+        : `${language}/${filePath}`;
+    } else {
+      console.log("No language found for problem:", problem);
+      return ''
+    }
+  } else {
+    path = useDifficultyFolder
+    ? `${basePath}/${difficulty}/${filePath}`
+    : `${filePath}`;
+  }
+
+  const url = `https://github.com/${hook}/tree/main/${path}`;
+
+  const topicHeader = `## ${topic}`;
+  const topicTableHeader = `\n${topicHeader}\n| Problem Name | Difficulty |\n| ------- | ------- |\n`;
+  const newRow = `| [${problem}](${url}) | ${difficulty} |\n`;
+
+  // Check if the LeetCode Section exists, or add it
+  let leetCodeSectionStartIndex = markdownFile.indexOf(leetCodeSectionStart);
+  if (leetCodeSectionStartIndex === -1) {
+    markdownFile +=
+      '\n' + [leetCodeSectionStart, leetCodeSectionHeader, leetCodeSectionEnd].join('\n');
+    leetCodeSectionStartIndex = markdownFile.indexOf(leetCodeSectionStart);
+  }
+
+  // Get LeetCode section and the Before & After sections
+  const beforeSection = markdownFile.slice(0, markdownFile.indexOf(leetCodeSectionStart));
+  const afterSection = markdownFile.slice(
+    markdownFile.indexOf(leetCodeSectionEnd) + leetCodeSectionEnd.length,
+  );
+
+  let leetCodeSection = markdownFile.slice(
+    markdownFile.indexOf(leetCodeSectionStart) + leetCodeSectionStart.length,
+    markdownFile.indexOf(leetCodeSectionEnd),
+  );
+
+  // Check if topic table exists, or add it
+  let topicTableIndex = leetCodeSection.indexOf(topicHeader);
+  if (topicTableIndex === -1) {
+    leetCodeSection += topicTableHeader;
+    topicTableIndex = leetCodeSection.indexOf(topicHeader);
+  }
+
+  // Get the Topic table. If topic table was just added, then its end === LeetCode Section end
+  const endTopicString = leetCodeSection.slice(topicTableIndex).match(/\|\n[^|]/)?.[0];
+  const endTopicIndex = (endTopicString != null) ? leetCodeSection.indexOf(endTopicString, topicTableIndex + 1) : -1;
+  let topicTable =
+    endTopicIndex === -1
+      ? leetCodeSection.slice(topicTableIndex)
+      : leetCodeSection.slice(topicTableIndex, endTopicIndex + 1);
+  topicTable = topicTable.trim();
+
+  // Check if the problem exists in topic table, prevent duplicate add
+  const problemIndex = topicTable.indexOf(problem);
+  if (problemIndex !== -1) {
+    return markdownFile;
+  }
+
+  // Append problem to the Topic
+  topicTable = [topicTable, newRow, '\n'].join('\n');
+
+  // Replace the old Topic table with the updated one in the markdown file
+  leetCodeSection =
+    leetCodeSection.slice(0, topicTableIndex) +
+    topicTable +
+    (endTopicIndex === -1 ? '' : leetCodeSection.slice(endTopicIndex + 1));
+
+  markdownFile = [
+    beforeSection,
+    leetCodeSectionStart,
+    leetCodeSection,
+    leetCodeSectionEnd,
+    afterSection,
+  ].join('');
+
+  return markdownFile;
+}
+
+// Sorts each Topic table by the problem number
+function sortTopicsInReadme(markdownFile) {
+  let beforeSection = markdownFile.slice(0, markdownFile.indexOf(leetCodeSectionStart));
+  const afterSection = markdownFile.slice(
+    markdownFile.indexOf(leetCodeSectionEnd) + leetCodeSectionEnd.length,
+  );
+
+  // Matches any text between the start and end tags. Should never fail to match.
+  const leetCodeSection = markdownFile.match(
+    new RegExp(`${leetCodeSectionStart}([\\s\\S]*)${leetCodeSectionEnd}`),
+  )?.[1];
+  if (leetCodeSection == null) throw new Error('LeetCodeTopicSectionNotFound');
+
+
+  // Remove the header
+  let topics = leetCodeSection.trim().split('## ');
+  topics.shift();
+
+  // Get Array<sorted-topic>
+  topics = topics.map(section => {
+    let lines = section.trim().split('\n');
+
+    // Get the problem topic
+    const topic = lines.shift();
+
+    // Check if topic exists elsewhere
+    let topicHeaderIndex = markdownFile.indexOf(`## ${topic}`);
+    let leetCodeSectionStartIndex = markdownFile.indexOf(leetCodeSectionStart);
+    if (topicHeaderIndex < leetCodeSectionStartIndex) {
+      // matches the next '|\n' that doesn't precede a '|'. Typically this is '|\n#. Should always match if topic existed elsewhere.
+      const endTopicString = markdownFile.slice(topicHeaderIndex).match(/\|\n[^|]/)?.[0];
+      if (endTopicString == null) throw new Error('EndOfTopicNotFound');
+
+      // Get the old problems for merge
+      const endTopicIndex = markdownFile.indexOf(endTopicString, topicHeaderIndex + 1);
+      const topicSection = markdownFile.slice(topicHeaderIndex, endTopicIndex + 1);
+      const problemsToMerge = topicSection.trim().split('\n').slice(3);
+
+      // Merge previously solved problems and removes duplicates
+      lines = lines.concat(problemsToMerge).reduce((array, element) => {
+        if (!array.includes(element)) {
+          array.push(element);
+        }
+        return array;
+      }, []);
+
+      // Delete the old topic section after merging
+      beforeSection =
+        markdownFile.slice(0, topicHeaderIndex) +
+        markdownFile.slice(endTopicIndex + 1, markdownFile.indexOf(leetCodeSectionStart));
+    }
+
+    // Remove the header and header separator
+    lines = lines.slice(2);
+
+    lines.sort((a, b) => {
+      let numA = parseInt(a.match(/\/(\d+)-/)[1]);
+      let numB = parseInt(b.match(/\/(\d+)-/)[1]);
+      return numA - numB;
+    });
+
+    // Reconstruct the topic
+    return ['## ' + topic].concat('| Problem Name | Difficulty |', '| ------- | ------- |', lines).join('\n');
+  });
+
+  // Reconstruct the file
+  markdownFile =
+    beforeSection +
+    [leetCodeSectionStart, leetCodeSectionHeader, ...topics, leetCodeSectionEnd].join('\n') +
+    afterSection;
+
+  return markdownFile;
+}
