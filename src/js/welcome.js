@@ -50,7 +50,7 @@ const statusCode = (res, status, name) => {
       chrome.storage.local.set({ mode_type: 'commit' }, () => {
         $('#error').hide();
         $('#success').html(
-          `Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="http://leetcode.com">LeetCoding</a>!`,
+          `Successfully created <a target="blank" href="${res.html_url}">${name}</a>. Start <a href="https://leetcode.com">LeetCoding</a> or <a href="https://leetcode.cn">力扣</a>!`,
         );
         $('#success').show();
         $('#unlink').show();
@@ -349,6 +349,151 @@ $('#unlink a').on('click', () => {
   $('#unlink').hide();
   $('#success').text('Successfully unlinked your current git repo. Please create/link a new hook.');
 });
+
+/* Add sync count behavior */
+$('#sync_counts').on('click', async () => {
+  //Check if linked to repo
+  chrome.storage.local.get('leethub_hook', data => {
+    const hook = data.leethub_hook;
+    if (!hook) {
+      $('#error').text('No repository linked - Please link a repository to sync counts!');
+      $('#error').show();
+      return;
+    } else {
+      $('#error').hide();
+    }
+  });
+  //Get stats
+
+  const stats = {};
+  stats.solved = 0;
+  stats.easy = 0;
+  stats.medium = 0;
+  stats.hard = 0;
+  stats.shas = {};
+
+  //Get problems solved count from linked repo
+  const repo = await chrome.storage.local.get('leethub_hook').then(({ leethub_hook }) => {
+    if (leethub_hook == null) {
+      $('#error').text('No repository linked - Please link a repository to sync counts!');
+      $('#error').show();
+      return;
+    } else {
+      $('#error').hide();
+    }
+    return leethub_hook;
+  });
+
+  //Get token from storage
+  const token = await chrome.storage.local.get('leethub_token').then(({ leethub_token }) => {
+    if (leethub_token == null) {
+      $('#error').text('No token found - Please authorize LeetHub to access your GitHub account!');
+      $('#error').show();
+      return;
+    } else {
+      $('#error').hide();
+    }
+    return leethub_token;
+  });
+
+  // Fetch repository data using GitHub API
+  const fetchRepoData = async () => {
+    const MEDIUM = 'medium';
+    const HARD = 'hard';
+    const EASY = 'easy';
+    try {
+      const response = await fetch(`https://api.github.com/repos/${repo}/contents`, {
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch repository data: ${response.statusText}`);
+      }
+
+      const repoContents = await response.json();
+
+      const extractReadmeContent = async contents => {
+        const promises = contents.map(async item => {
+          try {
+            if (item.name.toLowerCase() === 'readme.md') {
+              const { content } = await fetchFileContent(repo, item.path, token, item.type);
+              const difficulty = content.split('<h3>')[1]?.split('</h3>')[0]?.trim();
+              console.debug(`Difficulty for ${item.path}: ${difficulty}`);
+              if (difficulty) {
+                if (difficulty.toLowerCase() === EASY) {
+                  stats.easy += 1;
+                } else if (difficulty.toLowerCase() === MEDIUM) {
+                  stats.medium += 1;
+                } else if (difficulty.toLowerCase() === HARD) {
+                  stats.hard += 1;
+                }
+                stats.solved += 1;
+              }
+              return { path: item.path, difficulty };
+            } else if (item.type === 'dir') {
+              const { content: subContents } = await fetchFileContent(
+                repo,
+                item.path,
+                token,
+                item.type,
+              );
+              console.debug(`Processing subdirectory: ${item.path}`);
+              // Recursively process subdirectories
+              return extractReadmeContent(subContents);
+            }
+          } catch (error) {
+            console.error(`Error processing ${item.path}: ${error.message}`);
+            return null;
+          }
+        });
+
+        // Wait for all promises to resolve concurrently
+        return Promise.all(promises);
+      };
+
+      await extractReadmeContent(repoContents);
+
+      // Update the stats in local storage
+      chrome.storage.local.set({ stats }, () => {
+        $('#p_solved').text(stats.solved);
+        $('#p_solved_easy').text(stats.easy);
+        $('#p_solved_medium').text(stats.medium);
+        $('#p_solved_hard').text(stats.hard);
+      });
+    } catch (error) {
+      console.error(error.message);
+      $('#error').text('Failed to fetch repository data. Please try again.').show();
+    }
+  };
+
+  fetchRepoData();
+});
+
+const fetchFileContent = async (repo, path, token, itemType) => {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    // Content is Base64 encoded
+    return {
+      content: itemType !== 'dir' ? atob(data.content) /* Decode base64*/ : data,
+      sha: data.sha,
+    };
+  } catch (error) {
+    console.error(`Failed to fetch file content: ${error.message}`);
+    throw error;
+  }
+};
 
 /* Detect mode type */
 chrome.storage.local.get('mode_type', data => {
