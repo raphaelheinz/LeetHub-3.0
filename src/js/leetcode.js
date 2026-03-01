@@ -1256,7 +1256,6 @@ const loader = (leetCode, suffix) => {
 
 // Use MutationObserver to determine when the submit button elements are loaded
 const observer = new MutationObserver(function (_mutations, observer) {
-  const v1SubmitBtn = document.querySelector('[data-cy="submit-code-btn"]');
   const v2SubmitBtn = document.querySelector('[data-e2e-locator="console-submit-button"]');
   const textareaList = document.getElementsByTagName('textarea');
   const textarea =
@@ -1265,14 +1264,6 @@ const observer = new MutationObserver(function (_mutations, observer) {
       : textareaList.length === 2
         ? textareaList[0]
         : textareaList[1];
-
-  if (v1SubmitBtn) {
-    observer.disconnect();
-
-    const leetCode = new LeetCodeV1();
-    v1SubmitBtn.addEventListener('click', () => loader(leetCode));
-    return;
-  }
 
   if (v2SubmitBtn && textarea) {
     observer.disconnect();
