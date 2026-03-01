@@ -80,6 +80,23 @@ $('#use-timestamp-filename').change(function () {
   chrome.storage.local.set({ useTimestampFilename: isChecked });
 });
 
+// Toggle solution post section
+$('#collapsible-solution-post-icon').click(() => {
+  $('#collapsible-solution-post-icon').toggleClass('open');
+  $('#collapsible-solution-post-container').toggle();
+
+  // Load from storage: use default value 'true' if not set (default enabled)
+  chrome.storage.local.get({ autoCommitSolutionPost: true }, data => {
+    $('#auto-commit-solution-post').prop('checked', data.autoCommitSolutionPost);
+  });
+});
+
+// Store Switch State
+$('#auto-commit-solution-post').change(function () {
+  const isChecked = $(this).is(':checked');
+  chrome.storage.local.set({ autoCommitSolutionPost: isChecked });
+});
+
 $('#msg-save-btn').click(() => {
   const commitMessage = $('#custom-commit-msg').val();
   chrome.runtime.sendMessage({

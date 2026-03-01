@@ -29,6 +29,18 @@
         "https://github.com/*"
       ],
       "js": [
+        "src/js/interceptor.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://leetcode.com/*",
+        "https://leetcode.cn/*",
+        "https://github.com/*"
+      ],
+      "js": [
         "src/js/leetcode.js",
         "src/js/authorize.js"
       ],

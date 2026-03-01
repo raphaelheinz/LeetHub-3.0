@@ -1030,24 +1030,15 @@ LeetCodeV1.prototype.markUploadFailed = function () {
  * and listens for messages from the injected script.
  */
 LeetCodeV2.prototype.injectAndListen = function () {
-  // 1. Create a <script> tag that loads the external interceptor file
-  const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('src/js/interceptor.js');
-  script.onload = () => {
-    // Clean up: remove the script tag after it has been loaded
-    script.remove();
-  };
-  
-  (document.head || document.documentElement).appendChild(script);
+  window.addEventListener('leetHubSubmissionId', (event) => {
+    console.log('[LeetHub] Received submission ID:', event.detail.submissionId);
+    this.processSubmission(event.detail.submissionId);
+  });
 
-  // 2. Set up a listener to receive messages from the injected script.
-  window.addEventListener('message', (event) => {
-    // Check if the message is from our script.
-    if (event.source === window && event.data && event.data.type === 'LEETHUB_SUBMISSION_ID') {
-      console.log('[LeetHub] Received submission ID from injected script:', event.data.submissionId);
-      // Once the ID is received, start the commit process.
-      this.processSubmission(event.data.submissionId);
-    }
+  window.addEventListener('leetHubSolutionPost', (event) => {
+    const { questionSlug, content, title } = event.detail;
+    console.log('LeetHub: Received solution post event:', event.detail);
+    this.handleSolutionPost(questionSlug, content, title);
   });
 };
 
@@ -1589,17 +1580,6 @@ const loader = (leetCode, suffix) => {
   }, 1000);
 };
 
-const isMacOS = window.navigator.userAgent.includes('Mac');
-
-// Submit by Keyboard Shortcuts only support on LeetCode v2
-function submitByShortcuts(event, leetCodeV2) {
-  const isEnterKey = event.key === 'Enter';
-
-  // Adapt to MacOS operating system
-  if (isEnterKey && ((isMacOS && event.metaKey) || (!isMacOS && event.ctrlKey))) {
-    loader(leetCodeV2);
-  }
-}
 
 // Use MutationObserver to determine when the submit button elements are loaded
 const observer = new MutationObserver(function (_mutations, observer) {
@@ -1624,9 +1604,7 @@ const observer = new MutationObserver(function (_mutations, observer) {
   if (v2SubmitBtn && textarea) {
     observer.disconnect();
 
-    const leetCode = new LeetCodeV2();
-    //v2SubmitBtn.addEventListener('click', () => loader(leetCode));
-    textarea.addEventListener('keydown', e => submitByShortcuts(e, leetCode));
+    new LeetCodeV2();
   }
 });
 
@@ -1809,3 +1787,190 @@ function sortTopicsInReadme(markdownFile) {
 
   return markdownFile;
 }
+
+// Function to convert questionSlug to problemName using the same logic as LeetHub
+async function questionSlugToProblemName(questionSlug) {
+  // Query LeetCode GraphQL to get question details
+  const questionDetailsQuery = {
+    query: `
+      query questionDetail($titleSlug: String!) {
+        question(titleSlug: $titleSlug) {
+          questionId
+          questionFrontendId
+          title
+          titleSlug
+        }
+      }
+    `,
+    variables: { titleSlug: questionSlug },
+    operationName: 'questionDetail',
+  };
+
+  const questionDetailsOptions = {
+    method: 'POST',
+    headers: {
+      cookie: document.cookie,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(questionDetailsQuery),
+  };
+
+  try {
+    const response = await fetch('https://leetcode.com/graphql/', questionDetailsOptions);
+    const data = await response.json();
+    const questionDetails = data.data.question;
+
+    if (questionDetails) {
+      const qNum = questionDetails.questionFrontendId;
+      const slugTitle = questionDetails.titleSlug;
+      return addLeadingZeros(qNum + '-' + slugTitle);
+    }
+  } catch (error) {
+    console.error('Error fetching question details:', error);
+  }
+
+  // Fallback: try to extract from current problem name format
+  return addLeadingZeros(convertToSlug(questionSlug));
+}
+
+// Function to get the last commit message for a problem by fetching from GitHub API
+async function getLastCommitMessage(problemName) {
+  try {
+    const { stats } = await chrome.storage.local.get('stats');
+    const { leethub_token } = await chrome.storage.local.get('leethub_token');
+    const { leethub_hook } = await chrome.storage.local.get('leethub_hook');
+    const { useDifficultyFolder = false } = await chrome.storage.local.get('useDifficultyFolder');
+    const { useLanguageFolder = false } = await chrome.storage.local.get('useLanguageFolder');
+
+    if (!stats?.shas || !leethub_token || !leethub_hook) {
+      return 'Add solution post - LeetHub';
+    }
+
+    // Try to find the exact problem name, or one that contains the problem name
+    let actualProblemName = problemName;
+    if (!stats.shas[problemName]) {
+      const availableProblems = Object.keys(stats.shas);
+      
+      // Try to find a problem that contains the slug or vice versa
+      const questionSlugPart = problemName.replace(/^\d{4}-/, ''); // Remove leading number if present
+      const matchingProblem = availableProblems.find(name => 
+        name.includes(questionSlugPart) || questionSlugPart.includes(name.replace(/^\d{4}-/, ''))
+      );
+      
+      if (matchingProblem) {
+        actualProblemName = matchingProblem;
+      } else {
+        // Use the original problemName for GitHub API call even if not in stats
+        actualProblemName = problemName;
+      }
+    }
+
+    // Even if no solution files are found in local storage, still try to fetch from GitHub
+    // because the stats might be incomplete or outdated
+
+    // Construct the path for the problem folder based on user settings
+    let folderPath = actualProblemName;
+    
+    // If using difficulty folders, we need to know the difficulty
+    // For now, let's try to fetch commits for the problem folder regardless of organization
+    if (useDifficultyFolder || useLanguageFolder) {
+      // For complex folder structures, we'll search commits more broadly
+      folderPath = problemName; // We'll search for any commits containing this problem name
+    }
+
+    // Fetch commits from GitHub API for this problem folder
+    const commitsUrl = `https://api.github.com/repos/${leethub_hook}/commits?path=${folderPath}&per_page=10`;
+    
+    const options = {
+      method: 'GET',
+      headers: {
+        'Authorization': `token ${leethub_token}`,
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    };
+
+    try {
+      const response = await fetch(commitsUrl, options);
+      if (response.status === 200) {
+        const commits = await response.json();
+        
+        if (commits && commits.length > 0) {
+          // Find the most recent commit that's not for README.md, NOTES.md, or Solution.md
+          for (const commit of commits) {
+            const message = commit.commit.message;
+            
+            // Skip commits for README, NOTES, or previous solution posts
+            if (message.includes('Create readme') || 
+                message.includes('Attach Notes') || 
+                message.includes('Prepend discussion') || 
+                message.includes('solution post') ||
+                message.includes('Add solution post')) {
+              continue;
+            }
+            
+            // Look for commits that contain time/space stats (typical solution commits)
+            if (message.includes('Time:') && message.includes('Space:') && message.includes('LeetHub')) {
+              return message;
+            }
+            
+            // If it's not a README/NOTES/solution-post and doesn't have stats, it might still be a solution
+            // (in case of custom commit messages or older format)
+            return message;
+          }
+        }
+      }
+    } catch (apiError) {
+      // Silently handle API errors
+    }
+    return 'Add solution post - LeetHub';
+  } catch (error) {
+    console.error('Error getting last commit message:', error);
+    return 'Add solution post - LeetHub';
+  }
+}
+
+// Function to handle solution post upload
+LeetCodeV2.prototype.handleSolutionPost = async function (questionSlug, content, title) {
+  try {
+    // Check if auto-commit solution post is enabled (default: true)
+    const { autoCommitSolutionPost = true } =
+      await chrome.storage.local.get('autoCommitSolutionPost');
+
+    if (!autoCommitSolutionPost) {
+      console.log('Solution post auto-commit is disabled, skipping upload');
+      return;
+    }
+
+    console.log('Processing solution post for:', questionSlug);
+
+    const problemName = await questionSlugToProblemName(questionSlug);
+    const commitMsg = await getLastCommitMessage(problemName);
+
+    // Create the solution content with title
+    const solutionContent = `# ${title}\n\n${content}`;
+
+    // Upload the solution as Solution.md
+    await uploadGit(
+      btoa(unescape(encodeURIComponent(solutionContent))),
+      problemName,
+      'Solution.md',
+      commitMsg,
+      'upload',
+      false,
+    );
+
+    console.log('Solution post uploaded successfully for:', problemName);
+  } catch (error) {
+    console.error('Error uploading solution post:', error);
+  }
+}
+
+/*
+// add url change listener & manual submit button if it does not exist already
+setTimeout(() => {
+  const leetCode = new LeetCodeV2();
+  leetCode.addManualSubmitButton();
+  leetCode.addUrlChangeListener();
+}, 6000);
+*/
+
