@@ -49,5 +49,11 @@
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/js/interceptor.js"],
+      "matches": ["https://leetcode.com/*", "https://leetcode.cn/*"]
+    }
+  ]
 }
