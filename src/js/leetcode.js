@@ -1568,7 +1568,7 @@ const loader = (leetCode, suffix) => {
 
       /* Group problem into its relevant topics */
       const updateRepoReadMe = updateReadmeTopicTagsWithProblem(
-        leetCode.submissionData?.question?.topicTags,
+        leetCode.questionDetails?.topicTags,
         problemName
       );
 
