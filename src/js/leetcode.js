@@ -702,39 +702,38 @@ document.addEventListener('click', event => {
  * Injects the interceptor script into the page's "Main World"
  * and listens for messages from the injected script.
  */
-LeetCodeV2.prototype.injectAndListen = function () {
-  window.addEventListener('leetHubSubmissionId', (event) => {
-    console.log('[LeetHub] Received submission ID:', event.detail.submissionId);
-    this.processSubmission(event.detail.submissionId);
-  });
+class LeetCodeV2 {
+  constructor() {
+    this.submissionData;
+    this.progressSpinnerElementId = 'leethub_progress_elem';
+    this.progressSpinnerElementClass = 'leethub_progress';
+    this.injectSpinnerStyle();
+    this.addManualSubmitButton();
+    this.injectAndListen();
+  }
 
-  window.addEventListener('leetHubSolutionPost', (event) => {
-    const { questionSlug, content, title } = event.detail;
-    console.log('LeetHub: Received solution post event:', event.detail);
-    this.handleSolutionPost(questionSlug, content, title);
-  });
-};
+  injectAndListen() {
+    window.addEventListener('leetHubSubmissionId', (event) => {
+      console.log('[LeetHub] Received submission ID:', event.detail.submissionId);
+      this.processSubmission(event.detail.submissionId);
+    });
 
-/**
- * The main function that handles the entire commit process based on the submissionId.
- */
-LeetCodeV2.prototype.processSubmission = async function (submissionId) {
-  // Set the submissionId as a global variable so the existing init function can use it.
-  window.leethubLastSubmissionId = submissionId;
+    window.addEventListener('leetHubSolutionPost', async (event) => {
+      const { questionSlug, content, title } = event.detail;
+      console.log('LeetHub: Received solution post event:', event.detail);
+      this.handleSolutionPost(questionSlug, content, title);
+    });
+  }
 
-  // Directly call the loader from the existing code.
-  loader(this);
-};
+  async processSubmission(submissionId) {
+    // Set the submissionId as a global variable so the existing init function can use it.
+    window.leethubLastSubmissionId = submissionId;
 
-function LeetCodeV2() {
-  this.submissionData;
-  this.progressSpinnerElementId = 'leethub_progress_elem';
-  this.progressSpinnerElementClass = 'leethub_progress';
-  this.injectSpinnerStyle();
-  this.addManualSubmitButton();
-  this.injectAndListen();
-}
-LeetCodeV2.prototype.init = async function () {
+    // Directly call the loader from the existing code.
+    loader(this);
+  }
+
+  async init() {
     const submissionId = window.leethubLastSubmissionId;
     if (!submissionId) {
       alert('Could not find a recent submission ID. Please try submitting again.');
@@ -831,7 +830,7 @@ query submissionDetails($submissionId: ID!) {
     .then(res => res.data.question);
   this.questionDetails = questionDetailsData;
 };
-LeetCodeV2.prototype.findAndUploadCode = function (
+  findAndUploadCode(
   problemName,
   fileName,
   commitMsg,
@@ -853,7 +852,7 @@ LeetCodeV2.prototype.findAndUploadCode = function (
     cb,
   );
 };
-LeetCodeV2.prototype.getCode = function () {
+  getCode() {
   if (this.submissionData != null) {
     return this.submissionData.code;
   }
@@ -865,7 +864,7 @@ LeetCodeV2.prototype.getCode = function () {
 
   return code[0].innerText;
 };
-LeetCodeV2.prototype.getLanguageExtension = function () {
+  getLanguageExtension() {
   if (this.submissionData != null) {
     return languages[this.submissionData.lang.verboseName ?? this.submissionData.langVerboseName];
   }
@@ -882,30 +881,30 @@ LeetCodeV2.prototype.getLanguageExtension = function () {
 
   return languages[lang];
 };
-LeetCodeV2.prototype.getLanguage = function () {
+  getLanguage() {
   if (this.submissionData != null) {
     return this.submissionData.lang.verboseName;
   }
   return '';
 };
 
-LeetCodeV2.prototype.getNotesIfAny = function () {};
+  getNotesIfAny() {}
 
-LeetCodeV2.prototype.extractQuestionNumber = function () {
+  extractQuestionNumber() {
   return this.submissionData.question.questionFrontendId ?? this.submissionData.question.questionId;
-};
+}
 
 /**
  * Gets a formatted problem name slug from the LeetCodeV2 instance.
  * @returns {string} A string combining the problem number and the slug title.
  */
-LeetCodeV2.prototype.getProblemNameSlug = function () {
+  getProblemNameSlug() {
   const slugTitle = this.submissionData.question.titleSlug;
   const qNum = this.extractQuestionNumber();
   return addLeadingZeros(qNum + '-' + slugTitle);
-};
+}
 
-LeetCodeV2.prototype.getSuccessStateAndUpdate = function () {
+  getSuccessStateAndUpdate() {
   const successTag = document.querySelectorAll('[data-e2e-locator="submission-result"]');
   if (checkElem(successTag)) {
     console.log(successTag[0]);
@@ -914,7 +913,7 @@ LeetCodeV2.prototype.getSuccessStateAndUpdate = function () {
   }
   return false;
 };
-LeetCodeV2.prototype.parseStats = function () {
+  parseStats() {
   if (this.submissionData != null) {
     const runtimePercentile =
       Math.round((this.submissionData.runtimePercentile + Number.EPSILON) * 100) / 100;
@@ -926,7 +925,7 @@ LeetCodeV2.prototype.parseStats = function () {
       space: this.submissionData.memoryDisplay,
       spacePercentile: spacePercentile,
       problemTopic: this.questionDetails?.topicTags?.[0]?.name ?? 'UNKNOWN',
-    };
+    }
   }
 
   // Doesn't work unless we wait for page to finish loading.
@@ -943,7 +942,7 @@ LeetCodeV2.prototype.parseStats = function () {
 
   return formatStats(time, timePercentile, space, spacePercentile);
 };
-LeetCodeV2.prototype.parseQuestion = function () {
+  parseQuestion() {
   let markdown;
   if (this.submissionData != null) {
     const questionUrl = window.location.href.split('/submissions')[0];
@@ -961,7 +960,7 @@ LeetCodeV2.prototype.parseQuestion = function () {
 
   return markdown;
 };
-LeetCodeV2.prototype.parseQuestionTitle = function () {
+  parseQuestionTitle() {
   if (this.submissionData != null) {
     return this.submissionData.question.title;
   }
@@ -978,7 +977,7 @@ LeetCodeV2.prototype.parseQuestionTitle = function () {
 
   return questionTitle;
 };
-LeetCodeV2.prototype.parseQuestionDescription = function () {
+  parseQuestionDescription() {
   if (this.submissionData != null) {
     return this.submissionData.question.content;
   }
@@ -989,7 +988,7 @@ LeetCodeV2.prototype.parseQuestionDescription = function () {
   }
   return description[0].content;
 };
-LeetCodeV2.prototype.parseDifficulty = function () {
+  parseDifficulty() {
   if (this.submissionData != null) {
     return this.submissionData.question.difficulty;
   }
@@ -1001,7 +1000,7 @@ LeetCodeV2.prototype.parseDifficulty = function () {
   // Else, we're not on the description page. Nothing we can do.
   return 'unknown';
 };
-LeetCodeV2.prototype.startSpinner = function () {
+  startSpinner() {
   let elem = document.getElementById('leethub_progress_anchor_element');
   if (!elem) {
     elem = document.createElement('span');
@@ -1012,12 +1011,12 @@ LeetCodeV2.prototype.startSpinner = function () {
   this.insertToAnchorElement(elem);
   uploadState.uploading = true;
 };
-LeetCodeV2.prototype.injectSpinnerStyle = function () {
+  injectSpinnerStyle() {
   const style = document.createElement('style');
   style.textContent = `.${this.progressSpinnerElementClass} {pointer-events: none;width: 2.0em;height: 2.0em;border: 0.4em solid transparent;border-color: #eee;border-top-color: #3E67EC;border-radius: 50%;animation: loadingspin 1s linear infinite;} @keyframes loadingspin { 100% { transform: rotate(360deg) }}`;
   document.head.append(style);
 };
-LeetCodeV2.prototype.insertToAnchorElement = function (elem) {
+  insertToAnchorElement(elem) {
   if (document.URL.startsWith('${getLeetCodeBaseUrl()}/explore/')) {
     // TODO: support spinner when answering problems on Explore pages
     //   action = document.getElementsByClassName('action');
@@ -1040,7 +1039,7 @@ LeetCodeV2.prototype.insertToAnchorElement = function (elem) {
     if (target.childNodes.length > 0) target.prepend(elem);
   }
 };
-LeetCodeV2.prototype.markUploaded = function () {
+  markUploaded() {
   let elem = document.getElementById(this.progressSpinnerElementId);
   if (elem) {
     elem.className = '';
@@ -1048,7 +1047,7 @@ LeetCodeV2.prototype.markUploaded = function () {
       'display: inline-block;transform: rotate(45deg);height:24px;width:12px;border-bottom:7px solid #78b13f;border-right:7px solid #78b13f;';
   }
 };
-LeetCodeV2.prototype.markUploadFailed = function () {
+  markUploadFailed() {
   let elem = document.getElementById(this.progressSpinnerElementId);
   if (elem) {
     elem.className = '';
@@ -1057,7 +1056,7 @@ LeetCodeV2.prototype.markUploadFailed = function () {
   }
 };
 
-LeetCodeV2.prototype.addManualSubmitButton = function () {
+  addManualSubmitButton() {
   let elem = document.getElementById('manualGitSubmit');
   const domain = document.URL.match(/:\/\/(www\.)?(.[^/:]+)/)[2].split('.')[0];
   if (elem || domain != 'leetcode') {
@@ -1087,7 +1086,55 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
     const target = notesIcon[0].closest('button.ml-auto').parentElement;
     target.prepend(submitButton);
   }
-};
+  }
+
+  addUrlChangeListener() {
+    window.navigation.addEventListener('navigate', _ => {
+      const problem = window.location.href.match(/leetcode\.(com|cn)\/problems\/(.*)\/submissions/);
+      const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
+      if (problem && problem.length > 2 && submissionId && submissionId.length > 1) {
+        chrome.storage.local.set({ [problem[2]]: submissionId[1] });
+      }
+    });
+  }
+
+  // Function to handle solution post upload
+  async handleSolutionPost(questionSlug, content, title) {
+    try {
+      // Check if auto-commit solution post is enabled (default: true)
+      const { autoCommitSolutionPost = true } =
+        await chrome.storage.local.get('autoCommitSolutionPost');
+
+      if (!autoCommitSolutionPost) {
+        console.log('Solution post auto-commit is disabled, skipping upload');
+        return;
+      }
+
+      console.log('Processing solution post for:', questionSlug);
+
+      const problemName = await questionSlugToProblemName(questionSlug);
+      
+      const commitMsg = await getLastCommitMessage(problemName);
+
+      // Create the solution content with title
+      const solutionContent = `# ${title}\n\n${content}`;
+
+      // Upload the solution as Solution.md
+      await uploadGit(
+        btoa(unescape(encodeURIComponent(solutionContent))),
+        problemName,
+        'Solution.md',
+        commitMsg,
+        'upload',
+        false,
+      );
+
+      console.log('Solution post uploaded successfully for:', problemName);
+    } catch (error) {
+      console.error('Error uploading solution post:', error);
+    }
+  }
+}
 
 /* Validate if string can be added as suffix. Can add more constrains if necessary. */
 function isValidSuffix(string) {
@@ -1096,16 +1143,6 @@ function isValidSuffix(string) {
   }
   return true;
 }
-
-LeetCodeV2.prototype.addUrlChangeListener = function () {
-  window.navigation.addEventListener('navigate', _ => {
-    const problem = window.location.href.match(/leetcode\.(com|cn)\/problems\/(.*)\/submissions/);
-    const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
-    if (problem && problem.length > 2 && submissionId && submissionId.length > 1) {
-      chrome.storage.local.set({ [problem[2]]: submissionId[1] });
-    }
-  });
-};
 
 /* Sync to local storage */
 chrome.storage.local.get('isSync', data => {
@@ -1593,41 +1630,6 @@ async function getLastCommitMessage(problemName) {
   }
 }
 
-// Function to handle solution post upload
-LeetCodeV2.prototype.handleSolutionPost = async function (questionSlug, content, title) {
-  try {
-    // Check if auto-commit solution post is enabled (default: true)
-    const { autoCommitSolutionPost = true } =
-      await chrome.storage.local.get('autoCommitSolutionPost');
-
-    if (!autoCommitSolutionPost) {
-      console.log('Solution post auto-commit is disabled, skipping upload');
-      return;
-    }
-
-    console.log('Processing solution post for:', questionSlug);
-
-    const problemName = await questionSlugToProblemName(questionSlug);
-    const commitMsg = await getLastCommitMessage(problemName);
-
-    // Create the solution content with title
-    const solutionContent = `# ${title}\n\n${content}`;
-
-    // Upload the solution as Solution.md
-    await uploadGit(
-      btoa(unescape(encodeURIComponent(solutionContent))),
-      problemName,
-      'Solution.md',
-      commitMsg,
-      'upload',
-      false,
-    );
-
-    console.log('Solution post uploaded successfully for:', problemName);
-  } catch (error) {
-    console.error('Error uploading solution post:', error);
-  }
-}
 
 /*
 // add url change listener & manual submit button if it does not exist already
