@@ -7,7 +7,7 @@
   "author": "Raphael Heinz",
   "action": {
     "default_icon": "assets/thumbnail.png",
-    "default_popup": "src/html/popup.html"
+    "default_popup": "dist/html/popup.html"
   },
   "icons": {
     "16": "assets/thumbnail.png",
@@ -15,7 +15,7 @@
     "128": "assets/thumbnail.png"
   },
   "background": {
-    "service_worker": "src/js/background.js"
+    "service_worker": "dist/js/background.js"
   },
   "permissions": [
     "unlimitedStorage",
@@ -29,7 +29,7 @@
         "https://github.com/*"
       ],
       "js": [
-        "src/js/interceptor.js"
+        "dist/js/interceptor.js"
       ],
       "run_at": "document_start",
       "world": "MAIN"
@@ -41,8 +41,8 @@
         "https://github.com/*"
       ],
       "js": [
-        "src/js/leetcode.js",
-        "src/js/authorize.js"
+        "dist/js/leetcode.js",
+        "dist/js/authorize.js"
       ],
       "run_at": "document_idle"
     }
@@ -52,7 +52,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["src/js/interceptor.js"],
+      "resources": ["dist/js/interceptor.js"],
       "matches": ["https://leetcode.com/*", "https://leetcode.cn/*"]
     }
   ]

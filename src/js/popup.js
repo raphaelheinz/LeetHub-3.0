@@ -8,9 +8,9 @@ $('#authenticate').on('click', () => {
   }
 });
 
-$('#welcome_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
+$('#welcome_URL').attr('href', chrome.runtime.getURL('dist/html/welcome.html'));
 
-$('#hook_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
+$('#hook_URL').attr('href', chrome.runtime.getURL('dist/html/welcome.html'));
 
 $('#collapsible-commit-message-icon').click(() => {
   $('#collapsible-commit-message-icon').toggleClass('open');

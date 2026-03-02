@@ -1,5 +1,5 @@
 const displayWelcomePage = () => {
-  const url = chrome.runtime.getURL('src/html/welcome.html');
+  const url = chrome.runtime.getURL('dist/html/welcome.html');
   chrome.tabs.create({ url: url, active: true });
 };
 

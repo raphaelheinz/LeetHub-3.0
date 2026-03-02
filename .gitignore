@@ -1,6 +1,7 @@
 .env
-build/*
-node_modules
 .vscode
-**/.DS_Store
+build/*
+dist/*
 release/*
+node_modules
+**/.DS_Store

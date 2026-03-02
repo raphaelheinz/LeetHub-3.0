@@ -1,2 +1,4 @@
 src/js/static/jquery-3.3.1.min.js
 src/js/static/semantic-2.4.1.min.js
+dist/js/static/jquery-3.3.1.min.js
+dist/js/static/semantic-2.4.1.min.js
