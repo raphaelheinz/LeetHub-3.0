@@ -12,6 +12,8 @@ $('#welcome_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
 
 $('#hook_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
 
+$('#change_repo_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
+
 $('#collapsible-commit-message-icon').click(() => {
   $('#collapsible-commit-message-icon').toggleClass('open');
   $('#collapsible-commit-message-container').toggle();
