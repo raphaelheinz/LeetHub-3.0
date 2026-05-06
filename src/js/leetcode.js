@@ -212,8 +212,15 @@ async function updateReadmeTopicTagsWithProblem(topicTags, problemName) {
     }
   }
 
+  const readmeBeforeProcessing = readme;
+
   for (const topic of topicTags) {
     readme = await appendProblemToReadme(topic.name, readme, leethub_hook, problemName);
+  }
+
+  if (readme === readmeBeforeProcessing) {
+    console.log(`No README changes detected for ${problemName}, skipping topics upload.`);
+    return;
   }
 
   readme = sortTopicsInReadme(readme);
