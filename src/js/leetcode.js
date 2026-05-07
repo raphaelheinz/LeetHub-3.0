@@ -1061,11 +1061,49 @@ function LeetCodeV2() {
   this.addManualSubmitButton();
   this.injectAndListen();
 }
+
+/**
+ * Fetches the most recent accepted submission ID for the problem currently
+ * shown in the browser. Used as a fallback when no submission was made in the
+ * current page session (e.g. after a page reload, or when the user manually
+ * triggers an upload via the Push button).
+ */
+async function getLatestAcceptedSubmissionId() {
+  const match = window.location.href.match(/problems\/([^/]+)\//);
+  if (!match) return null;
+  const questionSlug = match[1];
+
+  const query = {
+    query: `query submissionList($questionSlug: String!) {
+      questionSubmissionList(offset: 0, limit: 1, questionSlug: $questionSlug, status: 10) {
+        submissions { id }
+      }
+    }`,
+    variables: { questionSlug },
+    operationName: 'submissionList',
+  };
+
+  try {
+    const data = await fetch(`${getLeetCodeBaseUrl()}/graphql/`, {
+      method: 'POST',
+      headers: { cookie: document.cookie, 'content-type': 'application/json' },
+      body: JSON.stringify(query),
+    }).then(r => r.json());
+
+    return data?.data?.questionSubmissionList?.submissions?.[0]?.id ?? null;
+  } catch (err) {
+    console.error('LeetHub: failed to fetch latest accepted submission', err);
+    return null;
+  }
+}
+
 LeetCodeV2.prototype.init = async function () {
-    const submissionId = window.leethubLastSubmissionId;
+    let submissionId = window.leethubLastSubmissionId;
     if (!submissionId) {
-      alert('Could not find a recent submission ID. Please try submitting again.');
-      return;
+      submissionId = await getLatestAcceptedSubmissionId();
+      if (!submissionId) {
+        throw new Error('Could not find a recent submission ID. Please submit first.');
+      }
     }
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const isCN = getLeetCodeBaseUrl() === 'https://leetcode.cn';
@@ -1181,7 +1219,7 @@ LeetCodeV2.prototype.findAndUploadCode = function (
   );
 };
 LeetCodeV2.prototype.getCode = function () {
-  if (this.submissionData != null) {
+  if (this.submissionData) {
     return this.submissionData.code;
   }
 
@@ -1242,7 +1280,7 @@ LeetCodeV2.prototype.getSuccessStateAndUpdate = function () {
   return false;
 };
 LeetCodeV2.prototype.parseStats = function () {
-  if (this.submissionData != null) {
+  if (this.submissionData) {
     const runtimePercentile =
       Math.round((this.submissionData.runtimePercentile + Number.EPSILON) * 100) / 100;
     const spacePercentile =
@@ -1272,7 +1310,7 @@ LeetCodeV2.prototype.parseStats = function () {
 };
 LeetCodeV2.prototype.parseQuestion = function () {
   let markdown;
-  if (this.submissionData != null) {
+  if (this.submissionData) {
     const questionUrl = window.location.href.split('/submissions')[0];
     const qTitle = `${this.extractQuestionNumber()}. ${this.submissionData.question.title}`;
     const qBody = this.parseQuestionDescription();
