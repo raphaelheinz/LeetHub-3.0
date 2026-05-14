@@ -1219,7 +1219,17 @@ LeetCodeV2.prototype.getLanguage = function () {
 LeetCodeV2.prototype.getNotesIfAny = function () {};
 
 LeetCodeV2.prototype.extractQuestionNumber = function () {
-  return this.submissionData.question.questionFrontendId ?? this.submissionData.question.questionId;
+  // Extract the LeetCode problem number from `questionDetails` and `submissionData` in order of priority
+  if (this.questionDetails && this.questionDetails.questionFrontendId) {
+    return this.questionDetails.questionFrontendId;
+  }
+  if (this.submissionData && this.submissionData.question && this.submissionData.question.questionFrontendId) {
+    return this.submissionData.question.questionFrontendId;
+  }
+  if (this.questionDetails && this.questionDetails.questionId) {
+    return this.questionDetails.questionId;
+  }
+  return this.submissionData?.question?.questionId;
 };
 
 /**
