@@ -864,11 +864,23 @@ LeetCodeV1.prototype.getProblemNameSlug = function () {
     let qtitle = document.getElementsByClassName('css-v3d350');
     if (checkElem(qtitle)) {
       questionTitle = qtitle[0].innerHTML;
+    } else {
+      // Try to obtain Chinese Try to obtain Chinese
+      const chineseTitle = document.querySelector('div[class*="question-title"] h4');
+      if (chineseTitle && chineseTitle.textContent) {
+        questionTitle = chineseTitle.textContent;
+      }
     }
   } else if (checkElem(questionDescriptionElem)) {
     let qtitle = document.getElementsByClassName('question-title');
     if (checkElem(qtitle)) {
       questionTitle = qtitle[0].innerText;
+    } else {
+      // Try to obtain Chinese
+      const chineseTitle = document.querySelector('div[data-testid="question-title"]');
+      if (chineseTitle && chineseTitle.textContent) {
+        questionTitle = chineseTitle.textContent;
+      }
     }
   }
   return addLeadingZeros(convertToSlug(questionTitle));
@@ -929,7 +941,13 @@ LeetCodeV1.prototype.parseQuestion = function () {
     if (checkElem(qtitle)) {
       qtitle = qtitle[0].innerHTML;
     } else {
-      qtitle = 'unknown-problem';
+      // Try to obtain Chinese
+      const chineseTitle = document.querySelector('div[class*="question-title"] h4');
+      if (chineseTitle && chineseTitle.textContent) {
+        qtitle = chineseTitle.textContent;
+      } else {
+        qtitle = 'unknown-problem';
+      }
     }
 
     // Problem difficulty, each problem difficulty has its own class.
@@ -952,7 +970,13 @@ LeetCodeV1.prototype.parseQuestion = function () {
     if (checkElem(questionTitle)) {
       questionTitle = questionTitle[0].innerText;
     } else {
-      questionTitle = 'unknown-problem';
+      // Try to obtain Chinese
+      const chineseTitle = document.querySelector('div[data-testid="question-title"]');
+      if (chineseTitle && chineseTitle.textContent) {
+        questionTitle = chineseTitle.textContent;
+      } else {
+        questionTitle = 'unknown-problem';
+      }
     }
 
     const questionBody = questionDescriptionElem[0].innerHTML;
