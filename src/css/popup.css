@@ -1,11 +1,63 @@
+:root {
+  --bg-color: #dfd9d99d;
+  --text-color: #000000;
+}
+
 body {
   width: 350px;
-  background-color: #dfd9d99d !important;
+  background-color: var(--bg-color) !important;
+  color: var(--text-color);
   padding: 10px;
   text-align: center;
-  transition: background-color 0.75s ease;
+  transition: background-color 0.75s ease, color 0.5s ease;
   font-size: 13px;
   font-family: 'Helvetica Neue', 'Lucida Grande', sans-serif;
+}
+
+body.dark {
+  --bg-color: #111111;
+  --text-color: #ffffff;
+}
+
+body.light {
+  --bg-color: #dfd9d99d;
+  --text-color: #000000;
+}
+
+body.dark,
+body.dark .ui.grid,
+body.dark .ui.grid .column,
+body.dark p,
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark h5,
+body.dark .ui.header,
+body.dark label,
+body.dark .onboarding,
+body.dark #title,
+body.dark #caption,
+body.dark #repo_url {
+  color: var(--text-color) !important;
+}
+
+body.dark #p_solved_easy,
+body.dark #p_solved_medium,
+body.dark #p_solved_hard {
+  color: var(--text-color) !important;
+}
+
+body.dark .onboarding {
+  border-top-color: rgba(255, 255, 255, 0.3);
+}
+
+body.dark .collapsible-container {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+body.dark code {
+  color: var(--text-color);
 }
 
 #title {
@@ -120,4 +172,43 @@ body {
   color: green;
   font-size: 14px;
   display: none;
+}
+
+.theme-toggle-footer {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0 2px;
+  margin-top: 4px;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+body.dark .theme-toggle-btn {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+body.dark .theme-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.theme-toggle-btn .icon {
+  margin: 0;
+  font-size: 14px;
 }

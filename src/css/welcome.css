@@ -1,9 +1,39 @@
+:root {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+}
+
 body {
-  background-color: #000000 !important;
+  background-color: var(--bg-color) !important;
+  color: var(--text-color);
   padding: 10px;
   text-align: center;
-  transition: background-color 0.75s ease;
+  transition: background-color 0.75s ease, color 0.5s ease;
   font-family: 'Helvetica Neue', 'Lucida Grande', sans-serif;
+}
+
+body.dark {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+}
+
+body.light {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+}
+
+body.dark,
+body.dark .ui.grid,
+body.dark .ui.grid .column,
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark h5,
+body.dark .ui.header,
+body.dark .ui.form label,
+body.dark .caption {
+  color: var(--text-color) !important;
 }
 
 #title {
@@ -46,7 +76,7 @@ body {
 }
 
 p {
-  color: white !important;
+  color: var(--text-color) !important;
 }
 
 .onboarding {
@@ -59,4 +89,43 @@ p {
 a {
   color: white !important;
   cursor: pointer;
+}
+
+.theme-toggle-footer {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 8px;
+  margin-top: 8px;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+body.light .theme-toggle-btn {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.light .theme-toggle-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.theme-toggle-btn .icon {
+  margin: 0;
+  font-size: 16px;
 }

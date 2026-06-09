@@ -2,6 +2,30 @@ const option = () => {
   return $('#type').val();
 };
 
+// Theme handling for welcome page
+function applyThemeWelcome(theme) {
+  document.body.classList.remove('dark', 'light');
+  document.body.classList.add(theme);
+  const icon = document.getElementById('theme-toggle-icon');
+  if (icon) icon.className = theme === 'dark' ? 'sun icon' : 'moon icon';
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+  }
+}
+
+chrome.storage.local.get({ theme: 'dark' }, data => {
+  const theme = data.theme || 'dark';
+  applyThemeWelcome(theme);
+});
+
+$('#theme-toggle').on('click', () => {
+  chrome.storage.local.get({ theme: 'dark' }, data => {
+    const next = data.theme === 'dark' ? 'light' : 'dark';
+    chrome.storage.local.set({ theme: next }, () => applyThemeWelcome(next));
+  });
+});
+
 const repositoryName = () => {
   if (option() == 'new') return $('#name').val().trim();
   else return $('#existing_repo').val().trim();
