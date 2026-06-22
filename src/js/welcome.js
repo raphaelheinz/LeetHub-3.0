@@ -249,6 +249,9 @@ const linkRepo = (token, name) => {
                 $('#p_solved_medium').text(stats.medium);
                 $('#p_solved_hard').text(stats.hard);
               }
+              if (option() === 'link') {
+                $('#sync_counts').click();
+              }
             });
 
           /* Hide accordingly */

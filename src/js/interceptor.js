@@ -21,8 +21,8 @@ window.fetch = async function (...args) {
         console.log('LeetHub: Submission ID detected', data.submission_id);
         window.dispatchEvent(
           new CustomEvent('leetHubSubmissionId', {
-            detail: { submissionId: data.submission_id }
-          })
+            detail: { submissionId: data.submission_id },
+          }),
         );
       }
     } catch (e) {
@@ -82,10 +82,7 @@ XMLHttpRequest.prototype.open = function (method, url, ...args) {
 };
 
 XMLHttpRequest.prototype.send = function (data) {
-  if (
-    this._leethub_url?.includes('/graphql/') &&
-    this._leethub_method === 'POST'
-  ) {
+  if (this._leethub_url?.includes('/graphql/') && this._leethub_method === 'POST') {
     console.log('LeetHub: GraphQL POST detected via XHR');
 
     try {
