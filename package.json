@@ -5,11 +5,12 @@
   "private": true,
   "description": "Automatically integrate your code with LeetCode and GitHub",
   "scripts": {
-    "setup": "npm i",
+    "setup": "npm i && node setup-env.js",
+    "config": "node setup-env.js",
     "format": "prettier --write **/*.{js,jsx,ts,tsx,css,html}",
     "format-test": "prettier --check **/*.{js,jsx,ts,tsx,css,html}",
-    "lint": "eslint . --fix --ignore-pattern 'src/js/static/jquery-3.3.1.min.js' --ignore-pattern 'src/js/static/semantic-2.4.1.min.js'",
-    "lint-test": "eslint . --color --ignore-pattern 'src/js/static/jquery-3.3.1.min.js' --ignore-pattern 'src/js/static/semantic-2.4.1.min.js'"
+    "lint": "eslint . --fix",
+    "lint-test": "eslint . --color"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",

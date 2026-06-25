@@ -1,179 +1,227 @@
 /* global oAuth2 */
 
+/* ── Helpers ──────────────────────────────────────────────── */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function show(el) {
+  if (typeof el === 'string') el = $(el);
+  if (el) el.classList.remove('hidden');
+}
+
 let action = false;
 
-$('#authenticate').on('click', () => {
+/* ── Auth: GitHub OAuth ──────────────────────────────────── */
+$('#authenticate').addEventListener('click', () => {
   if (action) {
     oAuth2.begin();
   }
 });
 
-$('#welcome_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
+/* ── Auth: PAT Connect ───────────────────────────────────── */
+$('#pat_connect').addEventListener('click', () => {
+  const pat = $('#pat_token').value.trim();
+  const errorEl = $('#pat_error');
 
-$('#hook_URL').attr('href', chrome.runtime.getURL('src/html/welcome.html'));
+  if (!pat) {
+    errorEl.textContent = 'Please enter a Personal Access Token.';
+    errorEl.style.display = 'block';
+    return;
+  }
 
-$('#collapsible-commit-message-icon').click(() => {
-  $('#collapsible-commit-message-icon').toggleClass('open');
-  $('#collapsible-commit-message-container').toggle();
-  chrome.storage.local.get(['custom_commit_message'], data => {
-    console.log('data after toggling', data);
-    let commitMessage = data.custom_commit_message;
+  errorEl.style.display = 'none';
+  $('#pat_connect').disabled = true;
 
-    // if null, undefined, or an empty string, set default placeholder
-    if (!commitMessage) {
-      $('#custom-commit-msg').attr('placeholder', 'Time: {time}, Space: {space} - LeetHub');
-    } else {
-      $('#custom-commit-msg').attr('placeholder', commitMessage);
-      $('#custom-commit-msg').val(commitMessage);
+  const xhr = new XMLHttpRequest();
+  xhr.addEventListener('readystatechange', function () {
+    if (xhr.readyState === 4) {
+      $('#pat_connect').disabled = false;
+      if (xhr.status === 200) {
+        let username;
+        try {
+          username = JSON.parse(xhr.responseText).login;
+        } catch {
+          errorEl.textContent = 'Failed to parse user profile.';
+          errorEl.style.display = 'block';
+          return;
+        }
+        chrome.storage.local.set(
+          {
+            leethub_token: pat,
+            leethub_username: username,
+            mode_type: 'hook',
+          },
+          () => {
+            chrome.tabs.create({
+              url: chrome.runtime.getURL('src/html/welcome.html'),
+              active: true,
+            });
+          },
+        );
+      } else {
+        let errorMsg = 'Invalid token. Make sure it has the "repo" scope.';
+        if (xhr.status === 0) {
+          errorMsg = 'Network error. Check your connection.';
+        }
+        errorEl.textContent = errorMsg;
+        errorEl.style.display = 'block';
+      }
     }
   });
+  xhr.open('GET', 'https://api.github.com/user', true);
+  xhr.setRequestHeader('Authorization', `token ${pat}`);
+  xhr.send();
 });
 
-// Toggle difficulty folder section
-$('#collapsible-difficulty-icon').click(() => {
-  $('#collapsible-difficulty-icon').toggleClass('open');
-  $('#collapsible-difficulty-container').toggle();
+/* ── Hook URL ────────────────────────────────────────────── */
+$('#hook_URL').href = chrome.runtime.getURL('src/html/welcome.html');
 
-  // Load from storage: use default value 'false' if not set
-  chrome.storage.local.get({ useDifficultyFolder: false }, data => {
-    $('#use-difficulty-folder').prop('checked', data.useDifficultyFolder);
+/* ── Commit Message Accordion ────────────────────────────── */
+$('#commit-accordion-trigger').addEventListener('click', () => {
+  const trigger = $('#commit-accordion-trigger');
+  const content = $('#commit-accordion-content');
+  trigger.classList.toggle('open');
+  content.classList.toggle('open');
+
+  if (content.classList.contains('open')) {
+    chrome.storage.local.get(['custom_commit_message'], data => {
+      const msg = data.custom_commit_message;
+      const textarea = $('#custom-commit-msg');
+      if (!msg) {
+        textarea.placeholder = 'Time: {time}, Space: {space} - LeetHub';
+      } else {
+        textarea.placeholder = msg;
+        textarea.value = msg;
+      }
+    });
+  }
+});
+
+/* ── Settings Toggles ────────────────────────────────────── */
+function initToggle(checkboxId, storageKey, defaultVal = false) {
+  const checkbox = $(`#${checkboxId}`);
+  // Load initial state
+  chrome.storage.local.get({ [storageKey]: defaultVal }, data => {
+    checkbox.checked = data[storageKey];
   });
-});
-
-// Store Switch State
-$('#use-difficulty-folder').change(function () {
-  const isChecked = $(this).is(':checked');
-  chrome.storage.local.set({ useDifficultyFolder: isChecked });
-});
-
-// Toggle language folder section
-$('#collapsible-language-icon').click(() => {
-  $('#collapsible-language-icon').toggleClass('open');
-  $('#collapsible-language-container').toggle();
-
-  // Load from storage: use default value 'false' if not set
-  chrome.storage.local.get({ useLanguageFolder: false }, data => {
-    $('#use-language-folder').prop('checked', data.useLanguageFolder);
+  // Save on change
+  checkbox.addEventListener('change', () => {
+    chrome.storage.local.set({ [storageKey]: checkbox.checked });
   });
-});
+}
 
-// Store Switch State
-$('#use-language-folder').change(function () {
-  const isChecked = $(this).is(':checked');
-  chrome.storage.local.set({ useLanguageFolder: isChecked });
-});
+initToggle('use-difficulty-folder', 'useDifficultyFolder');
+initToggle('use-language-folder', 'useLanguageFolder');
+initToggle('use-timestamp-filename', 'useTimestampFilename');
+initToggle('auto-commit-solution-post', 'autoCommitSolutionPost', true);
 
-// Toggle timestamped filenames section
-$('#collapsible-timestamp-icon').click(() => {
-  $('#collapsible-timestamp-icon').toggleClass('open');
-  $('#collapsible-timestamp-container').toggle();
-
-  // Load stored toggle state
-  chrome.storage.local.get({ useTimestampFilename: false }, data => {
-    $('#use-timestamp-filename').prop('checked', data.useTimestampFilename);
-  });
-});
-
-// Save toggle state when checkbox changes
-$('#use-timestamp-filename').change(function () {
-  const isChecked = $(this).is(':checked');
-  chrome.storage.local.set({ useTimestampFilename: isChecked });
-});
-
-// Toggle solution post section
-$('#collapsible-solution-post-icon').click(() => {
-  $('#collapsible-solution-post-icon').toggleClass('open');
-  $('#collapsible-solution-post-container').toggle();
-
-  // Load from storage: use default value 'true' if not set (default enabled)
-  chrome.storage.local.get({ autoCommitSolutionPost: true }, data => {
-    $('#auto-commit-solution-post').prop('checked', data.autoCommitSolutionPost);
-  });
-});
-
-// Store Switch State
-$('#auto-commit-solution-post').change(function () {
-  const isChecked = $(this).is(':checked');
-  chrome.storage.local.set({ autoCommitSolutionPost: isChecked });
-});
-
-$('#msg-save-btn').click(() => {
-  const commitMessage = $('#custom-commit-msg').val();
+/* ── Commit Message Save/Reset ───────────────────────────── */
+$('#msg-save-btn').addEventListener('click', () => {
+  const commitMessage = $('#custom-commit-msg').value;
   chrome.runtime.sendMessage({
     action: 'customCommitMessageUpdated',
     message: commitMessage.trim(),
   });
 
-  const successMessage = $('#success-message');
-  successMessage.show();
+  const feedback = $('#success-message');
+  feedback.style.display = 'inline';
   setTimeout(() => {
-    successMessage.hide();
+    feedback.style.display = 'none';
   }, 3000);
 });
 
-$('#msg-reset-btn').click(() => {
-  $('#custom-commit-msg').val('');
-  $('#custom-commit-msg').attr('placeholder', 'Time: {time}, Space: {space} - LeetHub'); // reset to default
+/* ── Msg Reset ───────────────────────────────────────────── */
+$('#msg-reset-btn').addEventListener('click', () => {
+  const textarea = $('#custom-commit-msg');
+  textarea.value = '';
+  textarea.placeholder = 'Time: {time}, Space: {space} - LeetHub';
   chrome.runtime.sendMessage({ action: 'customCommitMessageUpdated', message: null });
 });
 
-/* when variable is clicked, add to custom commit message text area*/
-$('.commit-variable').on('click', function () {
-  var variableName = $(this).attr('id');
-  $('#custom-commit-msg').val(function (index, currentValue) {
-    return currentValue + `{${variableName}} `;
+/* ── Variable Pills ──────────────────────────────────────── */
+$$('.var-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const varName = pill.dataset.var;
+    const textarea = $('#custom-commit-msg');
+    textarea.value += `{${varName}} `;
+    textarea.focus();
   });
 });
 
+/* ── Init: Determine which mode to show ──────────────────── */
 chrome.storage.local.get('leethub_token', data => {
   const token = data.leethub_token;
-  if (token === null || token === undefined) {
-    action = true;
-    $('#auth_mode').show();
-  } else {
-    // To validate user, load user object from GitHub.
-    const AUTHENTICATION_URL = 'https://api.github.com/user';
 
-    const xhr = new XMLHttpRequest();
-    xhr.addEventListener('readystatechange', function () {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          /* Show MAIN FEATURES */
-          chrome.storage.local.get('mode_type', data2 => {
-            if (data2 && data2.mode_type === 'commit') {
-              $('#commit_mode').show();
-              /* Get problem stats and repo link */
-              chrome.storage.local.get(['stats', 'leethub_hook'], data3 => {
-                const { stats } = data3;
-                if (stats && stats.solved) {
-                  $('#p_solved').text(stats.solved);
-                  $('#p_solved_easy').text(stats.easy);
-                  $('#p_solved_medium').text(stats.medium);
-                  $('#p_solved_hard').text(stats.hard);
-                }
-                const leethubHook = data3.leethub_hook;
-                if (leethubHook) {
-                  $('#repo_url').html(
-                    `<a target="blank" style="color: cadetblue !important; font-size:0.8em;" href="https://github.com/${leethubHook}">${leethubHook}</a>`,
-                  );
-                }
-              });
-            } else {
-              $('#hook_mode').show();
-            }
-          });
-        } else if (xhr.status === 401) {
-          // bad oAuth: reset token and redirect to authorization process again!
-          chrome.storage.local.set({ leethub_token: null }, () => {
-            console.log('BAD oAuth!!! Redirecting back to oAuth process');
-            action = true;
-            $('#auth_mode').show();
-          });
-        }
-      }
-    });
-    xhr.open('GET', AUTHENTICATION_URL, true);
-    xhr.setRequestHeader('Authorization', `token ${token}`);
-    xhr.send();
+  if (!token) {
+    action = true;
+    show('#auth_mode');
+    return;
   }
+
+  // Validate token
+  const xhr = new XMLHttpRequest();
+  xhr.addEventListener('readystatechange', function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        const user = JSON.parse(xhr.responseText);
+
+        chrome.storage.local.get('mode_type', data2 => {
+          if (data2 && data2.mode_type === 'commit') {
+            show('#commit_mode');
+
+            // Set user info
+            if (user.avatar_url) {
+              const avatar = $('#user_avatar');
+              avatar.src = user.avatar_url;
+              avatar.style.display = 'block';
+            }
+            if (user.login) {
+              $('#user_name').textContent = user.login;
+            }
+
+            // Get stats and repo link
+            chrome.storage.local.get(['stats', 'leethub_hook'], data3 => {
+              const { stats } = data3;
+              if (stats && stats.solved) {
+                $('#p_solved').textContent = stats.solved;
+                $('#p_solved_easy').textContent = stats.easy;
+                $('#p_solved_medium').textContent = stats.medium;
+                $('#p_solved_hard').textContent = stats.hard;
+              }
+
+              const hook = data3.leethub_hook;
+              if (hook) {
+                const repoLink = $('#repo_url');
+                repoLink.href = `https://github.com/${hook}`;
+                repoLink.textContent = hook;
+              }
+            });
+          } else {
+            show('#hook_mode');
+          }
+        });
+      } else if (xhr.status === 401) {
+        chrome.storage.local.set({ leethub_token: null }, () => {
+          action = true;
+          show('#auth_mode');
+        });
+      }
+    }
+  });
+  xhr.open('GET', 'https://api.github.com/user', true);
+  xhr.setRequestHeader('Authorization', `token ${token}`);
+  xhr.send();
 });
+
+/* ── Logout ──────────────────────────────────────────────── */
+const handleLogout = () => {
+  chrome.storage.local.remove(
+    ['leethub_token', 'leethub_username', 'leethub_hook', 'mode_type', 'stats'],
+    () => {
+      window.location.reload();
+    },
+  );
+};
+
+$('#logout_btn').addEventListener('click', handleLogout);
+$('#logout_btn_hook').addEventListener('click', handleLogout);

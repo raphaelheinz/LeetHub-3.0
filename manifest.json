@@ -21,6 +21,12 @@
     "unlimitedStorage",
     "storage"
   ],
+  "host_permissions": [
+    "https://api.github.com/*",
+    "https://github.com/*",
+    "https://leetcode.com/*",
+    "https://leetcode.cn/*"
+  ],
   "content_scripts": [
     {
       "matches": [

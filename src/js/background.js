@@ -5,11 +5,13 @@ const displayWelcomePage = () => {
 
 const closeTab = () => {
   chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
-    chrome.tabs.remove(tabs[0].id);
+    if (tabs && tabs.length > 0) {
+      chrome.tabs.remove(tabs[0].id);
+    }
   });
 };
 
-const handleMessage = request => {
+const handleMessage = (request, sender, sendResponse) => {
   if (!request) {
     console.log('Received undefined message');
     return;
@@ -27,9 +29,30 @@ const handleMessage = request => {
       closeTab();
       displayWelcomePage();
     } else {
-      alert('Error while trying to authenticate your profile!');
       closeTab();
     }
+  }
+
+  if (request.action === 'crossFetch') {
+    const { url, options } = request;
+    fetch(url, options)
+      .then(async response => {
+        const text = await response.text();
+        sendResponse({
+          ok: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          text: text,
+        });
+      })
+      .catch(error => {
+        sendResponse({
+          ok: false,
+          error: error.message,
+        });
+      });
+    return true; // Keep the message channel open for async response
   }
 };
 

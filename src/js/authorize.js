@@ -41,26 +41,56 @@ const localAuth = {
    */
   requestToken(code) {
     const that = this;
-    const data = new FormData();
-    data.append('client_id', this.CLIENT_ID);
-    data.append('client_secret', this.CLIENT_SECRET);
-    data.append('code', code);
+    const body = JSON.stringify({
+      client_id: this.CLIENT_ID,
+      client_secret: this.CLIENT_SECRET,
+      code: code,
+    });
 
-    const xhr = new XMLHttpRequest();
-    xhr.addEventListener('readystatechange', function () {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          that.finish(xhr.responseText.match(/access_token=([^&]*)/)[1]);
+    chrome.runtime.sendMessage(
+      {
+        action: 'crossFetch',
+        url: this.ACCESS_TOKEN_URL,
+        options: {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: body,
+        },
+      },
+      response => {
+        if (response && response.ok) {
+          let tokenData;
+          try {
+            tokenData = JSON.parse(response.text);
+          } catch {
+            // fallback to URL encoded match if not JSON
+            const match = response.text.match(/access_token=([^&]*)/);
+            if (match) {
+              that.finish(match[1]);
+              return;
+            }
+          }
+          if (tokenData && tokenData.access_token) {
+            that.finish(tokenData.access_token);
+          } else {
+            alert('Error while trying to authenticate your profile!');
+            chrome.runtime.sendMessage({
+              closeWebPage: true,
+              isSuccess: false,
+            });
+          }
         } else {
+          alert('Error while trying to authenticate your profile!');
           chrome.runtime.sendMessage({
             closeWebPage: true,
             isSuccess: false,
           });
         }
-      }
-    });
-    xhr.open('POST', this.ACCESS_TOKEN_URL, true);
-    xhr.send(data);
+      },
+    );
   },
 
   /**
@@ -69,28 +99,47 @@ const localAuth = {
    * @param token The OAuth2 token given to the application from the provider.
    */
   finish(token) {
-    /* Get username */
-    // To validate user, load user object from GitHub.
     const AUTHENTICATION_URL = 'https://api.github.com/user';
 
-    const xhr = new XMLHttpRequest();
-    xhr.addEventListener('readystatechange', function () {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          const username = JSON.parse(xhr.responseText).login;
+    chrome.runtime.sendMessage(
+      {
+        action: 'crossFetch',
+        url: AUTHENTICATION_URL,
+        options: {
+          method: 'GET',
+          headers: {
+            Authorization: `token ${token}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        },
+      },
+      response => {
+        if (response && response.ok) {
+          try {
+            const username = JSON.parse(response.text).login;
+            chrome.runtime.sendMessage({
+              closeWebPage: true,
+              isSuccess: true,
+              token,
+              username,
+              KEY: this.KEY,
+            });
+          } catch {
+            alert('Error while trying to authenticate your profile!');
+            chrome.runtime.sendMessage({
+              closeWebPage: true,
+              isSuccess: false,
+            });
+          }
+        } else {
+          alert('Error while trying to authenticate your profile!');
           chrome.runtime.sendMessage({
             closeWebPage: true,
-            isSuccess: true,
-            token,
-            username,
-            KEY: this.KEY,
+            isSuccess: false,
           });
         }
-      }
-    });
-    xhr.open('GET', AUTHENTICATION_URL, true);
-    xhr.setRequestHeader('Authorization', `token ${token}`);
-    xhr.send();
+      },
+    );
   },
 };
 

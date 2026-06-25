@@ -1,200 +1,169 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LeetHub-3.0</title>
     <link rel="stylesheet" href="../css/popup.css" />
-    <script src="../js/static/jquery-3.3.1.min.js"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css"
-      rel="stylesheet"
-    />
-    <script src="../js/static/semantic-2.4.1.min.js"></script>
   </head>
 
   <body>
-    <div class="ui grid container">
-      <div class="sixteen wide center aligned column">
-        <h1 id="title">Leet<span style="color: #ff6c0a">Hub</span>-3.0</h1>
-        <p id="caption">Sync your code from LeetCode to GitHub</p>
-        <br />
-        <!-- Authentication mode -->
-        <div id="auth_mode" hidden>
-          <p class="onboarding">
-            <br />
-            Authenticate with GitHub to use
-            <strong>Leet<span style="color: #ff6c0a">Hub</span></strong>
-          </p>
-          <button id="authenticate" class="ui secondary button">
-            <i class="icon github"></i>
-            Authenticate
-          </button>
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <header class="popup-header">
+      <div class="popup-logo">Leet<span class="accent">Hub</span>-3.0</div>
+      <div class="popup-tagline">Sync your solutions to GitHub</div>
+    </header>
+
+    <!-- ── Auth Mode ───────────────────────────────────────── -->
+    <div id="auth_mode" class="auth-section hidden">
+      <p class="auth-prompt">
+        Connect your GitHub account to start syncing your LeetCode solutions to LeetHub
+        automatically.
+      </p>
+      <button id="authenticate" class="btn-github">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+          />
+        </svg>
+        Authenticate with GitHub
+      </button>
+
+      <div class="divider">or</div>
+
+      <div class="pat-group">
+        <label class="pat-label" for="pat_token">Personal Access Token (PAT)</label>
+        <div class="pat-input-row">
+          <input type="password" id="pat_token" class="pat-input" placeholder="ghp_xxxxxxxxxxxx" />
+          <button id="pat_connect" class="btn-connect">Connect</button>
+        </div>
+        <div id="pat_error" class="pat-error"></div>
+      </div>
+    </div>
+
+    <!-- ── Hook Mode ───────────────────────────────────────── -->
+    <div id="hook_mode" class="hook-section hidden">
+      <p class="hook-prompt">
+        Set up a repository to start using
+        <strong>Leet<span style="color: #ff6c0a">Hub</span>-3.0</strong>
+      </p>
+      <a id="hook_URL" href="" target="_blank" class="btn-setup-hook">
+        <svg viewBox="0 0 16 16">
+          <path
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+          />
+        </svg>
+        Set up Repository
+      </a>
+      <div style="margin-top: 16px">
+        <button id="logout_btn_hook" class="btn-logout">Disconnect</button>
+      </div>
+    </div>
+
+    <!-- ── Commit Mode ─────────────────────────────────────── -->
+    <div id="commit_mode" class="hidden">
+      <!-- User bar -->
+      <div class="user-bar">
+        <img id="user_avatar" class="user-avatar" src="" alt="" style="display: none" />
+        <div class="user-info">
+          <div id="user_name" class="user-name"></div>
+          <a id="repo_url" class="user-repo" href="" target="_blank"></a>
+        </div>
+        <div class="status-dot"></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card total">
+          <span id="p_solved" class="stat-number">0</span>
+          <span class="stat-label">Solved</span>
+        </div>
+        <div class="stat-card easy">
+          <span id="p_solved_easy" class="stat-number">0</span>
+          <span class="stat-label">Easy</span>
+        </div>
+        <div class="stat-card medium">
+          <span id="p_solved_medium" class="stat-number">0</span>
+          <span class="stat-label">Medium</span>
+        </div>
+        <div class="stat-card hard">
+          <span id="p_solved_hard" class="stat-number">0</span>
+          <span class="stat-label">Hard</span>
+        </div>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-section">
+        <div class="settings-title">Settings</div>
+
+        <div class="setting-row">
+          <span class="setting-label"><span class="icon">📁</span> Difficulty Folders</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="use-difficulty-folder" />
+            <span class="toggle-slider"></span>
+          </label>
         </div>
 
-        <!-- Repo Hook mode -->
-        <div id="hook_mode" hidden>
-          <p class="onboarding">
-            <br />
-            Set up repository hook to use
-            <strong>Leet<span style="color: #ff6c0a">Hub</span></strong>
-          </p>
-          <a id="hook_URL" href="" target="blank" class="ui secondary button">
-            <i class="icon github"></i>
-            Set up Hook
-          </a>
+        <div class="setting-row">
+          <span class="setting-label"><span class="icon">🌐</span> Language Folders</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="use-language-folder" />
+            <span class="toggle-slider"></span>
+          </label>
         </div>
 
-        <!-- Commit mode -->
-        <div id="commit_mode" hidden>
-          <p id="repo_url" class="ui small header"></p>
-          <p class="onboarding">Problems Solved: <span id="p_solved">0</span></p>
-          <p class="ui small header">
-            <span style="color: #5cb85c">Easy:</span>
-            <span id="p_solved_easy" style="color: #000000; opacity: 0.75">0 </span>
-            <span style="color: #f0ad4e">&ensp; &ensp; Medium:</span>
-            <span id="p_solved_medium" style="color: #000000; opacity: 0.75">0 </span>
-            <span style="color: #d9534f">&ensp; &ensp; Hard:</span>
-            <span id="p_solved_hard" style="color: #000000; opacity: 0.75">0 </span>
-          </p>
+        <div class="setting-row">
+          <span class="setting-label"><span class="icon">⏱️</span> Timestamped Files</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="use-timestamp-filename" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
 
-          <!-- Toggle custom commit menu -->
-          <span id="collapsible-commit-message-icon" class="collapsible-icon">&#9654;</span>
-          Customize Commit Message
+        <div class="setting-row">
+          <span class="setting-label"><span class="icon">📄</span> Auto-commit Solutions</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="auto-commit-solution-post" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
 
-          <div
-            id="collapsible-commit-message-container"
-            class="collapsible-container"
-            style="display: none"
-          >
-            <label for="variables">Available Variables</label>
-            <div id="variales">
-              <button class="commit-variable" id="time">Time (Time Percentile)</button>
-              <button class="commit-variable" id="space">Space (Space Percentile)</button>
-              <button class="commit-variable" id="date">Today's Date</button>
-              <button class="commit-variable" id="problemName">Problem Name</button>
-              <button class="commit-variable" id="difficulty">Difficulty</button>
-              <button class="commit-variable" id="language">Solved Language</button>
-              <button class="commit-variable" id="problemTopic">Problem Topic</button>
-            </div>
-            <textarea
-              rows="4"
-              id="custom-commit-msg"
-              placeholder="Time: {time}, Space: {space} - LeetHub"
-            ></textarea>
-            <div id="setting-btns">
-              <button class="setting-btns" id="msg-reset-btn">Reset</button>
-              <button class="setting-btns" id="msg-save-btn">Save</button>
-              <br />
-              <span id="success-message">Commit message saved!</span>
-            </div>
+      <!-- Commit Message -->
+      <div class="commit-section">
+        <button id="commit-accordion-trigger" class="accordion-trigger">
+          <span><span class="icon">📝</span> &nbsp;Commit Message</span>
+          <span class="accordion-chevron">&#9654;</span>
+        </button>
+        <div id="commit-accordion-content" class="accordion-content">
+          <div class="variables-label">Available Variables</div>
+          <div class="variables-row">
+            <button class="var-pill" data-var="time">Time</button>
+            <button class="var-pill" data-var="space">Space</button>
+            <button class="var-pill" data-var="date">Date</button>
+            <button class="var-pill" data-var="problemName">Problem</button>
+            <button class="var-pill" data-var="difficulty">Difficulty</button>
+            <button class="var-pill" data-var="language">Language</button>
+            <button class="var-pill" data-var="problemTopic">Topic</button>
           </div>
-
-          <!-- Toggle useDifficultyFolder setting -->
-          <div>
-            <span id="collapsible-difficulty-icon" class="collapsible-icon">&#9654;</span> Use
-            Difficulty Subfolder
-            <div
-              id="collapsible-difficulty-container"
-              class="collapsible-container"
-              style="display: none"
-            >
-              <p>
-                Organize files into folders like
-                <code>LeetCode/Easy/0001-two-sum/0001-two-sum.js</code>
-              </p>
-              <div class="centered-toggle">
-                <div class="ui toggle checkbox">
-                  <input type="checkbox" id="use-difficulty-folder" />
-                  <label for="use-difficulty-folder"></label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Toggle useLanguageFolder setting -->
-          <div>
-            <span id="collapsible-language-icon" class="collapsible-icon">&#9654;</span> Use
-            Language Subfolder
-            <div
-              id="collapsible-language-container"
-              class="collapsible-container"
-              style="display: none"
-            >
-              <p>
-                Organize files into folders like
-                <code>LeetCode/JavaScript/Easy/0001-two-sum/0001-two-sum.js</code>
-              </p>
-              <div class="centered-toggle">
-                <div class="ui toggle checkbox">
-                  <input type="checkbox" id="use-language-folder" />
-                  <label for="use-language-folder"></label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Toggle useTimestampFilename setting -->
-          <div>
-            <span id="collapsible-timestamp-icon" class="collapsible-icon">&#9654;</span> Enable
-            Timestamped Filenames
-            <div
-              id="collapsible-timestamp-container"
-              class="collapsible-container"
-              style="display: none"
-            >
-              <p>
-                Save submissions like <code>0001-two-sum_03-30-2025_12-30-15.js</code> to preserve
-                versions.
-              </p>
-              <div class="centered-toggle">
-                <input type="checkbox" id="use-timestamp-filename" />
-                <label for="use-timestamp-filename">Add versioned filenames (timestamped)</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Toggle autoCommitSolutionPost setting -->
-          <div>
-            <span id="collapsible-solution-post-icon" class="collapsible-icon">&#9654;</span>
-            Auto-Commit Solution Posts
-            <div
-              id="collapsible-solution-post-container"
-              class="collapsible-container"
-              style="display: none"
-            >
-              <p>
-                Automatically commit your solution posts to GitHub as <code>Solution.md</code> files
-                when you publish them on LeetCode.
-              </p>
-              <div class="centered-toggle">
-                <div class="ui toggle checkbox">
-                  <input type="checkbox" id="auto-commit-solution-post" checked />
-                  <label for="auto-commit-solution-post"></label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="ui small header">
-            Want more features?
-            <a
-              style="color: cadetblue !important"
-              target="_blank"
-              href="https://github.com/raphaelheinz/LeetHub-3.0/labels/feature"
-              >Request a feature!</a
-            >
+          <textarea
+            id="custom-commit-msg"
+            class="commit-textarea"
+            rows="3"
+            placeholder="Time: {time}, Space: {space}"
+          ></textarea>
+          <div class="commit-actions">
+            <button id="msg-reset-btn" class="btn-sm btn-reset">Reset</button>
+            <button id="msg-save-btn" class="btn-sm btn-save">Save</button>
+            <span id="success-message" class="save-feedback">✓ Saved</span>
           </div>
         </div>
       </div>
 
-      <!-- Generate Socials -->
-      <div id="socials" class="sixteen wide column">
-        <a href="https://github.com/raphaelheinz/LeetHub-3.0" target="_blank">
-          <i class="ui black github icon"></i>
-        </a>
-        <a href="mailto:raphael.heinz.hof.university@gmail.com" target="_blank">
-          <i class="ui red envelope icon"></i>
-        </a>
-        <a id="welcome_URL" href="" target="_blank"><i class="ui grey globe icon"></i></a>
+      <!-- Footer -->
+      <div class="popup-footer">
+        <button id="logout_btn" class="btn-logout">Disconnect</button>
+        <span class="version-text">v0.0.16</span>
       </div>
     </div>
 
