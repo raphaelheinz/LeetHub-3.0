@@ -888,7 +888,35 @@ query submissionDetails($submissionId: ID!) {
   return '';
 };
 
-  getNotesIfAny() {}
+  async getNotesIfAny() {
+    const titleSlug = this.submissionData?.question?.titleSlug;
+    if (!titleSlug) return '';
+
+    const noteQuery = {
+      query:
+        '\n    query questionNote($titleSlug: String!) {\n  question(titleSlug: $titleSlug) {\n    questionId\n    note\n  }\n}\n    ',
+      variables: { titleSlug },
+      operationName: 'questionNote',
+    };
+
+    const noteOptions = {
+      method: 'POST',
+      headers: {
+        cookie: document.cookie,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(noteQuery),
+    };
+
+    try {
+      const res = await fetch(`${getLeetCodeBaseUrl()}/graphql/`, noteOptions);
+      const data = await res.json();
+      return data?.data?.question?.note || '';
+    } catch (err) {
+      console.log('LeetHub: Error fetching notes', err);
+      return '';
+    }
+  }
 
   extractQuestionNumber() {
   return this.submissionData.question.questionFrontendId ?? this.submissionData.question.questionId;
@@ -1226,7 +1254,7 @@ const loader = (leetCode, suffix) => {
       });
 
       /* Upload Notes if any*/
-      let notes = leetCode.getNotesIfAny();
+      let notes = await leetCode.getNotesIfAny();
       let updateNotes;
       if (notes != undefined && notes.length > 0) {
         updateNotes = uploadGit(
