@@ -1582,16 +1582,17 @@ const loader = (leetCode, suffix) => {
         fileName = suffix ? `${problemName}${suffix}${language}` : `${problemName}${language}`;
       }
 
+      /* Wait for notes upload before continuing, to avoid a GitHub commit race */
+      await updateNotes;
+
       /* Upload code to Git */
-      const updateCode = leetCode.findAndUploadCode(problemName, fileName, commitMsg, 'upload');
+      const updateCode = await leetCode.findAndUploadCode(problemName, fileName, commitMsg, 'upload');
 
       /* Group problem into its relevant topics */
-      const updateRepoReadMe = updateReadmeTopicTagsWithProblem(
+      const updateRepoReadMe = await updateReadmeTopicTagsWithProblem(
         leetCode.questionDetails?.topicTags,
         problemName
       );
-
-      await Promise.all([updateReadMe, updateNotes, updateCode, updateRepoReadMe]);
 
       uploadState.uploading = false;
       leetCode.markUploaded();
