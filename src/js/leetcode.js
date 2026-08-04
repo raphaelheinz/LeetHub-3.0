@@ -1060,6 +1060,7 @@ function LeetCodeV2() {
   this.injectSpinnerStyle();
   this.addManualSubmitButton();
   this.injectAndListen();
+  this.addUrlChangeListener();
 }
 LeetCodeV2.prototype.init = async function () {
     const submissionId = window.leethubLastSubmissionId;
@@ -1398,14 +1399,14 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
   submitButton.textContent = 'Push ';
   submitButton.appendChild(getGitIcon());
   submitButton.appendChild(getToolTip());
-  submitButton.addEventListener('click', () => loader(this));
-  submitButton.addEventListener('contextmenu', event => {
+  submitButton.addEventListener('click', () => this.manualSync());
+  submitButton.addEventListener('contextmenu', async event => {
     event.preventDefault();
     const suffix = prompt(
       'Add a suffix for this solution file, i.e., -bfs, -dfs. \r\nWe don\'recommend includes special character except for "-".',
     );
     if (isValidSuffix(suffix)) {
-      loader(this, suffix);
+      await this.manualSync(suffix);
     }
   });
 
@@ -1414,6 +1415,56 @@ LeetCodeV2.prototype.addManualSubmitButton = function () {
     const target = notesIcon[0].closest('button.ml-auto').parentElement;
     target.prepend(submitButton);
   }
+};
+
+LeetCodeV2.prototype.getProblemSlugFromUrl = function (url = window.location.href) {
+  const match = url.match(/leetcode\.(?:com|cn)\/problems\/([^/?#]+)/);
+  return match?.[1];
+};
+
+LeetCodeV2.prototype.getSubmissionIdFromUrl = function (url = window.location.href) {
+  const match = url.match(/\/submissions\/detail\/(\d+)/);
+  return match?.[1];
+};
+
+LeetCodeV2.prototype.rememberSubmissionIdFromUrl = function (url = window.location.href) {
+  const problemSlug = this.getProblemSlugFromUrl(url);
+  const submissionId = this.getSubmissionIdFromUrl(url);
+
+  if (problemSlug && submissionId) {
+    chrome.storage.local.set({ [`submission_${problemSlug}`]: submissionId });
+  }
+
+  return submissionId;
+};
+
+LeetCodeV2.prototype.getManualSubmissionId = async function () {
+  const currentSubmissionId = this.rememberSubmissionIdFromUrl();
+  if (currentSubmissionId) {
+    return currentSubmissionId;
+  }
+
+  const problemSlug = this.getProblemSlugFromUrl();
+  if (!problemSlug) {
+    return undefined;
+  }
+
+  const storageKey = `submission_${problemSlug}`;
+  const stored = await chrome.storage.local.get([storageKey, problemSlug]);
+  return stored[storageKey] || stored[problemSlug];
+};
+
+LeetCodeV2.prototype.manualSync = async function (suffix) {
+  const submissionId = await this.getManualSubmissionId();
+  if (!submissionId) {
+    alert(
+      'Could not find a submission ID. Open the accepted submission you want to sync, then click Push again.',
+    );
+    return;
+  }
+
+  window.leethubLastSubmissionId = submissionId;
+  loader(this, suffix);
 };
 
 /* Validate if string can be added as suffix. Can add more constrains if necessary. */
@@ -1425,13 +1476,15 @@ function isValidSuffix(string) {
 }
 
 LeetCodeV2.prototype.addUrlChangeListener = function () {
-  window.navigation.addEventListener('navigate', _ => {
-    const problem = window.location.href.match(/leetcode\.(com|cn)\/problems\/(.*)\/submissions/);
-    const submissionId = window.location.href.match(/\/(\d+)(\/|\?|$)/);
-    if (problem && problem.length > 2 && submissionId && submissionId.length > 1) {
-      chrome.storage.local.set({ [problem[2]]: submissionId[1] });
-    }
-  });
+  this.rememberSubmissionIdFromUrl();
+
+  if (window.navigation) {
+    window.navigation.addEventListener('navigate', event => {
+      this.rememberSubmissionIdFromUrl(event.destination?.url);
+    });
+  }
+
+  window.addEventListener('popstate', () => this.rememberSubmissionIdFromUrl());
 };
 
 /* Sync to local storage */
@@ -1973,4 +2026,3 @@ setTimeout(() => {
   leetCode.addUrlChangeListener();
 }, 6000);
 */
-
