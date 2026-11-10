@@ -97,6 +97,28 @@ $('#auto-commit-solution-post').change(function () {
   chrome.storage.local.set({ autoCommitSolutionPost: isChecked });
 });
 
+/* Open the bulk sync panel for previously solved problems on the active LeetCode tab */
+$('#bulk-sync-btn').on('click', () => {
+  const showError = () =>
+    $('#bulk-sync-msg')
+      .text('Open leetcode.com or leetcode.cn in this tab (logged in), then click again.')
+      .show();
+
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (!tabs?.[0]) {
+      showError();
+      return;
+    }
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'leethubOpenBulkSync' }, response => {
+      if (chrome.runtime.lastError || !response?.ok) {
+        showError();
+        return;
+      }
+      window.close();
+    });
+  });
+});
+
 $('#msg-save-btn').click(() => {
   const commitMessage = $('#custom-commit-msg').val();
   chrome.runtime.sendMessage({
@@ -143,8 +165,22 @@ chrome.storage.local.get('leethub_token', data => {
             if (data2 && data2.mode_type === 'commit') {
               $('#commit_mode').show();
               /* Get problem stats and repo link */
-              chrome.storage.local.get(['stats', 'leethub_hook'], data3 => {
+              const keys = ['stats', 'leethub_hook', 'leetcode_solved_total'];
+              chrome.storage.local.get(keys, data3 => {
                 const { stats } = data3;
+                const leetCodeTotal = data3.leetcode_solved_total;
+                if (leetCodeTotal && leetCodeTotal.total > 0) {
+                  $('#p_solved_label').text('Synced to GitHub:');
+                  $('#p_leetcode_total')
+                    .text(` / ${leetCodeTotal.total} solved on LeetCode`)
+                    .attr(
+                      'title',
+                      `Easy ${leetCodeTotal.easy} · Medium ${leetCodeTotal.medium} · Hard ${leetCodeTotal.hard} ` +
+                        `(${leetCodeTotal.site.replace('https://', '')}, ` +
+                        `updated ${new Date(leetCodeTotal.updatedAt).toLocaleString()})`,
+                    )
+                    .show();
+                }
                 if (stats && stats.solved) {
                   $('#p_solved').text(stats.solved);
                   $('#p_solved_easy').text(stats.easy);

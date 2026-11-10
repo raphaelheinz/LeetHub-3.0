@@ -42,6 +42,7 @@
       ],
       "js": [
         "src/js/leetcode.js",
+        "src/js/bulkSync.js",
         "src/js/authorize.js"
       ],
       "run_at": "document_idle"

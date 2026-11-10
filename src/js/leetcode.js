@@ -1061,12 +1061,11 @@ function LeetCodeV2() {
   this.addManualSubmitButton();
   this.injectAndListen();
 }
-LeetCodeV2.prototype.init = async function () {
-    const submissionId = window.leethubLastSubmissionId;
-    if (!submissionId) {
-      alert('Could not find a recent submission ID. Please try submitting again.');
-      return;
-    }
+/**
+ * Fetches a submission's code, language, runtime/memory stats and question info from LeetCode.
+ * Shared by the regular submit flow and the bulk sync of past submissions (bulkSync.js).
+ */
+async function fetchSubmissionDetails(submissionId) {
   // Query for getting the solution runtime and memory stats, the code, the coding language, the question id, question title and question difficulty
   const isCN = getLeetCodeBaseUrl() === 'https://leetcode.cn';
   const submissionDetailsQuery = {
@@ -1134,12 +1133,17 @@ query submissionDetails($submissionId: ID!) {
     .then(res => res.json())
     .then(res => (isCN ? res.data.submissionDetail : res.data.submissionDetails));
   console.info('LeetHub:', { submissionDetailsData });
-  this.submissionData = submissionDetailsData;
+  return submissionDetailsData;
+}
 
+/**
+ * Fetches a question's title, content, difficulty and topic tags from LeetCode.
+ */
+async function fetchQuestionDetails(titleSlug) {
   const questionDetailsQuery = {
     query:
       '\n    query questionDetail($titleSlug: String!) {\n  question(titleSlug: $titleSlug) {\n    title\n    titleSlug\n    questionId\n    questionFrontendId\n    questionTitle\n    translatedTitle\n    content\n    translatedContent\n    categoryTitle\n    difficulty\n    stats\n    topicTags {\n      name\n      slug\n      translatedName\n    }\n  }\n}\n',
-    variables: { titleSlug: this.submissionData.question.titleSlug },
+    variables: { titleSlug },
     operationName: 'questionDetail',
   };
   const questionDetailsOptions = {
@@ -1156,7 +1160,17 @@ query submissionDetails($submissionId: ID!) {
   )
     .then(res => res.json())
     .then(res => res.data.question);
-  this.questionDetails = questionDetailsData;
+  return questionDetailsData;
+}
+
+LeetCodeV2.prototype.init = async function () {
+  const submissionId = window.leethubLastSubmissionId;
+  if (!submissionId) {
+    alert('Could not find a recent submission ID. Please try submitting again.');
+    return;
+  }
+  this.submissionData = await fetchSubmissionDetails(submissionId);
+  this.questionDetails = await fetchQuestionDetails(this.submissionData.question.titleSlug);
 };
 LeetCodeV2.prototype.findAndUploadCode = function (
   problemName,
