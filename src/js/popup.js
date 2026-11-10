@@ -97,6 +97,28 @@ $('#auto-commit-solution-post').change(function () {
   chrome.storage.local.set({ autoCommitSolutionPost: isChecked });
 });
 
+/* Open the bulk sync panel for previously solved problems on the active LeetCode tab */
+$('#bulk-sync-btn').on('click', () => {
+  const showError = () =>
+    $('#bulk-sync-msg')
+      .text('Open leetcode.com or leetcode.cn in this tab (logged in), then click again.')
+      .show();
+
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (!tabs?.[0]) {
+      showError();
+      return;
+    }
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'leethubOpenBulkSync' }, response => {
+      if (chrome.runtime.lastError || !response?.ok) {
+        showError();
+        return;
+      }
+      window.close();
+    });
+  });
+});
+
 $('#msg-save-btn').click(() => {
   const commitMessage = $('#custom-commit-msg').val();
   chrome.runtime.sendMessage({

@@ -53,6 +53,15 @@ Your submission may not be successfully uploaded to GitHub if you update the tex
 In the meantime, we have added a manual synchronization button next to notes icon. Please use the manual sync button only after you have successfully submitted your solution to Leetcode. Additionally, you can push previous submissions to GitHub by selecting the submission first and then click on the manual synchronization button.
 
 
+## Sync past solutions
+
+Solved problems before installing LeetHub? Open any page on <a href="https://leetcode.com/">leetcode.com</a> or <a href="https://leetcode.cn/">leetcode.cn</a> while logged in, click the extension icon and press **"Sync past solutions"**. A panel lists all problems you have solved. Select the ones you want (or **Select all**) and click **Sync selected**. LeetHub pushes the latest accepted submission of each problem, using your folder and commit message settings.
+
+* Problems that are already in your repository are marked and skipped, so you can run it again at any time.
+* Problems are pushed one at a time to stay within GitHub's rate limits. If the limit is reached, wait a few minutes and click **Sync selected** again to continue.
+* Keep the LeetCode tab open while syncing. Use **Dry run** to preview what would be pushed.
+
+
 ## Installation
 
 <div align="center">
