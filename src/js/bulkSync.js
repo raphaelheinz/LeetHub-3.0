@@ -16,6 +16,7 @@ const BULK_SYNC_DELAY_MS = 3000; // pause between problems to stay below GitHub/
 const BULK_SYNC_README_FLUSH_EVERY = 10; // update the topics README once per N pushed problems
 const BULK_SYNC_MAX_SUBMISSION_PAGES = 5; // look at most 5 * 20 submissions for an accepted one
 const BULK_SYNC_PANEL_ID = 'leethub-bulk-sync-panel';
+const SOLVED_TOTAL_REFRESH_MS = 6 * 60 * 60 * 1000; // refresh the LeetCode solved total every 6h
 const DIFFICULTY_COLORS = { Easy: '#00b8a3', Medium: '#ffc01e', Hard: '#ff375f' };
 
 const bulkSyncState = {
@@ -642,6 +643,37 @@ function renderBulkList() {
   renderBulkControls();
 }
 
+/* Stores the LeetCode solved total so the popup can show "synced / solved on LeetCode". */
+function saveLeetCodeSolvedTotal(problems) {
+  const count = level => problems.filter(p => p.difficulty === level).length;
+  return chrome.storage.local.set({
+    leetcode_solved_total: {
+      total: problems.length,
+      easy: count('Easy'),
+      medium: count('Medium'),
+      hard: count('Hard'),
+      site: getLeetCodeBaseUrl(),
+      updatedAt: Date.now(),
+    },
+  });
+}
+
+/* Refreshes the stored solved total in the background, at most every SOLVED_TOTAL_REFRESH_MS. */
+async function refreshLeetCodeSolvedTotal() {
+  const { leetcode_solved_total: saved } = await chrome.storage.local.get('leetcode_solved_total');
+  const isFresh =
+    saved?.site === getLeetCodeBaseUrl() && Date.now() - saved.updatedAt < SOLVED_TOTAL_REFRESH_MS;
+  if (isFresh) {
+    return;
+  }
+  try {
+    await saveLeetCodeSolvedTotal(await fetchSolvedProblems());
+  } catch (err) {
+    // not logged in or LeetCode unavailable: keep the previous value
+    console.log('LeetHub: could not refresh LeetCode solved total:', err.message);
+  }
+}
+
 async function loadProblemList() {
   setBulkStatus('Loading your solved problems from LeetCode...');
   try {
@@ -649,6 +681,7 @@ async function loadProblemList() {
       fetchSolvedProblems(),
       chrome.storage.local.get('stats'),
     ]);
+    saveLeetCodeSolvedTotal(solved);
     bulkSyncState.problems = solved.map(p => {
       const synced = hasSyncedSolution(stats, p.problemName);
       return { ...p, synced, selected: !synced, status: '' };
@@ -828,3 +861,8 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   openBulkSyncPanel();
   sendResponse({ ok: true });
 });
+
+if (/(^|\.)leetcode\.(com|cn)$/.test(window.location.hostname)) {
+  // wait until the page has settled so this does not compete with LeetCode's own requests
+  setTimeout(refreshLeetCodeSolvedTotal, 5000);
+}
